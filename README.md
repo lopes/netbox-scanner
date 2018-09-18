@@ -5,23 +5,6 @@ A scanner util for NetBox, because certain networks can be updated automagically
 
 Requirements:
 
-- Python 3
-- Postgres 10
-
-Python modules:
-
-- sqlalchemy
-- psycopg2
-- python-netbox
-- python-nmap
-
-netbox-scanner/
-- README.md
-- requirements.txt
-- setup.py
-- Makefile
-- netbox-scanner/
---- nbs.py
---- db.py
---- config.py
---- __init__.py
+* Python 3
+* Postgres 10.5
+* Nmap 7.60
