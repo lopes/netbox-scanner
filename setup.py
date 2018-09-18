@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 
-from setuptools import setup
-from codecs import open
+import setuptools
 
-setup(
-    name='netbox-scanner',
-    packages=['netbox-scanner'],
-    version='0.0.2',
-    description='',
-    long_description=open('README.txt',encoding='utf-8').read(),
+with open("README.md", "r") as fh:
+    long_description = fh.read()
+
+setuptools.setup(
+    name="netbox-scanner",
+    version="0.0.3",
     author='José Lopes de Oliveira Jr.',
-    license='MIT License',
-    url='https://github.com/forkd/netbox-scanner',
-    keywords=['netbox','ipam','network','scanner']
+    author_email="jlojunior@gmail.com",
+    description="A scanner util for NetBox",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/forkd/netbox-scanner",
+    packages=setuptools.find_packages(),
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
 )
