@@ -1,12 +1,21 @@
+#!/usr/bin/env python3
+
+from logging import getLogger
+from logging.config import dictConfig
+
+import config
 from nbscan import NetBoxScanner
-from config import NETBOX, DISABLE_TLS_WARNINGS, TARGETS
 
-from datetime import datetime
+dictConfig(config.LOGGING_CONFIG)
+logger = getLogger('netbox-scanner')
 
-print('starting  - {}'.format(datetime.now()))
-nbs = NetBoxScanner(NETBOX['ADDRESS'], NETBOX['TLS'], 
-    NETBOX['TOKEN'], NETBOX['PORT'], DISABLE_TLS_WARNINGS)
-nbs.sync(TARGETS)
-print('finishing - {}'.format(datetime.now()))
+nbs = NetBoxScanner(config.NETBOX['ADDRESS'], config.NETBOX['TLS'], 
+    config.NETBOX['TOKEN'], config.NETBOX['PORT'], config.TAG, 
+    config.UNKNOWN_HOSTNAME, config.DISABLE_TLS_WARNINGS)
+
+logger.debug('starting')
+nbs.sync(config.TARGETS)
+logger.debug('finished')
 
 exit(0)
+1975107045

@@ -1,5 +1,7 @@
 # netbox-scanner configuration file.
 
+from logging import DEBUG
+
 NETBOX = {
     'ADDRESS': '',
     'TOKEN': '',
@@ -7,7 +9,22 @@ NETBOX = {
     'PORT': 443,
 }
 
-TAGS = ['auto']  # only 1 tag is allowed
+LOGGING_CONFIG = dict(
+    version = 1,
+    formatters = {
+        'f': {'format': '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'}
+    },
+    handlers = {
+        'h': {
+            'class': 'logging.StreamHandler', 
+            'formatter': 'f', 
+            'level': DEBUG
+        }
+    },
+    root = {'handlers': ['h'], 'level': DEBUG},
+)
+
+TAG = 'auto'
 UNKNOWN_HOSTNAME = 'UNKNOWN HOST'
 DISABLE_TLS_WARNINGS = True  # stop displaying TLS/SSL warnings?
 
