@@ -7,7 +7,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="netbox-scanner",
-    version="0.0.3",
+    version="0.0.4",
     author='José Lopes de Oliveira Jr.',
     author_email="jlojunior@gmail.com",
     description="A scanner util for NetBox",

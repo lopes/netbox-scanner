@@ -3,9 +3,7 @@ chardet==3.0.4
 cpe==1.2.1
 idna==2.7
 ipaddress==1.0.22
-psycopg2==2.7.5
 python-netbox==0.0.12
 python-nmap==0.6.1
 requests==2.19.1
-SQLAlchemy==1.2.11
 urllib3==1.23

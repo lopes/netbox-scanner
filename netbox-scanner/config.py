@@ -7,14 +7,6 @@ NETBOX = {
     'PORT': 443,
 }
 
-DATABASE = {
-    'NAME': 'nbscan',       # database name
-    'USER': 'nbscan',       # postgresql user
-    'PASSWORD': '',         # postgresql password
-    'HOST': 'localhost',    # database server
-    'PORT': '5432',         # database port
-}
-
 TAGS = ['auto']  # only 1 tag is allowed
 UNKNOWN_HOSTNAME = 'UNKNOWN HOST'
 DISABLE_TLS_WARNINGS = True  # stop displaying TLS/SSL warnings?
