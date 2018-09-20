@@ -6,6 +6,15 @@ A scanner util for NetBox, because certain networks can be updated automagically
 
     $ pip3 install netbox-scanner
 
+Another way is download from GitHub:
+
+    $ wget https://github.com/forkd/netbox-scanner/archive/master.zip
+    $ unzip netbox-scanner-master.zip -d netbox-scanner
+    $ cd netbox-scanner
+    $ pip install -r requirements.txt
+    $ vi netbox-scanner/config.py  # edit this file, save and exit
+    $ python netbox-scanner/netbox-scanner.py
+
 Note that `netbox-scanner` will require Nmap and an instance of NetBox ready to use.
 
 ## Usage

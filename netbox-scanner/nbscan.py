@@ -42,7 +42,7 @@ class NetBoxScanner(object):
             try:
                 description = self.get_description(nm[host]['hostnames'][0]['name'], 
                     nm[host]['osmatch'][0]['osclass'][0]['cpe'])
-            except (KeyError, AttributeError):
+            except (KeyError, AttributeError, IndexError):
                 description = self.unknown
             hosts.append({'address':address,'description':description})
         return hosts
