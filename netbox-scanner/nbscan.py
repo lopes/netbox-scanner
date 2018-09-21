@@ -1,4 +1,4 @@
-
+import logging
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 from ipaddress import IPv4Network
@@ -54,14 +54,23 @@ class NetBoxScanner(object):
         :return: nothing will be returned
         '''
         for net in networks:
+            logging.info('scanning network {}'.format(net))
             hosts = self.scan(net)
             for host in hosts:
                 nbhost = self.netbox.ipam.get_ip_addresses(address=host['address'])
                 if nbhost:
-                    if (self.tag in nbhost[0]['tags']) and (host['description'] != nbhost[0]['description']):
-                        self.netbox.ipam.update_ip('{}/32'.format(host['address']), description=host['description'])
+                    if (self.tag in nbhost[0]['tags']) and (host['description'] != 
+                        nbhost[0]['description']):
+                        logging.warning('updating host {} ({}) to: {}'.format(
+                            host['address'], nbhost[0]['description'],
+                            host['description']))
+                        self.netbox.ipam.update_ip('{}/32'.format(host['address']), 
+                            description=host['description'])
                 else:
-                    self.netbox.ipam.create_ip_address('{}/32'.format(host['address']), tags=[self.tag], description=host['description'])
+                    logging.info('creating host {} ({})'.format(host['address'], 
+                        host['description']))
+                    self.netbox.ipam.create_ip_address('{}/32'.format(host['address']), 
+                        tags=[self.tag], description=host['description'])
             
             for ipv4 in IPv4Network(net):
                 address = str(ipv4)
@@ -69,6 +78,8 @@ class NetBoxScanner(object):
                     nbhost = self.netbox.ipam.get_ip_addresses(address=address)
                     try:
                         if self.tag in nbhost[0]['tags']:
+                            logging.warning('deleting host {} ({})'.format(
+                                host['address'], host['description']))
                             self.netbox.ipam.delete_ip_address(address)
                     except IndexError:
                         pass

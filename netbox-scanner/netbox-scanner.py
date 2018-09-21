@@ -1,26 +1,38 @@
 #!/usr/bin/env python3
 
 import logging
-import logging.handlers as handlers
+from sys import stdout, stderr
+from argparse import ArgumentParser
 
 import config
 from nbscan import NetBoxScanner
 
 
-logger = logging.getLogger('netbox-scanner')
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s')
-loghandler = handlers.TimedRotatingFileHandler('netbox-scanner.log', when='M', interval=1, backupCount=2)
-loghandler.setLevel(logging.INFO)
-loghandler.setFormatter(formatter)
-logger.addHandler(loghandler)
+logging.basicConfig(filename='netbox-scanner.log', level=logging.INFO,
+    format='%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s')
 
-nbs = NetBoxScanner(config.NETBOX['ADDRESS'], config.NETBOX['TLS'], 
-    config.NETBOX['TOKEN'], config.NETBOX['PORT'], config.TAG, 
-    config.UNKNOWN_HOSTNAME, config.DISABLE_TLS_WARNINGS)
+argp = ArgumentParser()
+argp.add_argument('-a', '--address', help='netbox address', 
+    default=config.NETBOX['ADDRESS'])
+argp.add_argument('-s', '--tls', help='netbox use tls', 
+    action='store_true', default=config.NETBOX['TLS'])
+argp.add_argument('-t', '--token', help='netbox access token', 
+    default=config.NETBOX['TOKEN'])
+argp.add_argument('-p', '--port', help='netbox access port', 
+    default=config.NETBOX['PORT'])
+argp.add_argument('-g', '--tag', help='netbox-scanner tag', 
+    default=config.TAG)
+argp.add_argument('-u', '--unknown', help='netbox-scanner unknown host', 
+    default=config.UNKNOWN_HOSTNAME)
+argp.add_argument('-w', '--warnings', help='disable tls warnings', 
+    action='store_true', default=config.DISABLE_TLS_WARNINGS)
+argp.add_argument('-n', '--networks', nargs='+', help='networks to be scanned',
+    default=config.NETWORKS)
+args = argp.parse_args()
 
-logger.info('starting')
-nbs.sync(config.TARGETS)
-logger.info('finished')
+nbs = NetBoxScanner(args.address, args.tls, args.token, args.port, 
+    args.tag, args.unknown, args.warnings)
+
+nbs.sync(args.networks)
 
 exit(0)
