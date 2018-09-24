@@ -2,22 +2,22 @@
 
 import setuptools
 
-with open("README.md", "r") as fh:
+with open('README.md', 'r') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="netbox-scanner",
-    version="0.2.0",
+    name='netbox-scanner',
+    version='0.2.1',
     author='José Lopes de Oliveira Jr.',
-    author_email="jlojunior@gmail.com",
-    description="A scanner util for NetBox",
+    author_email='jlojunior@gmail.com',
+    description='A scanner util for NetBox',
     long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/forkd/netbox-scanner",
+    long_description_content_type='text/markdown',
+    url='https://github.com/forkd/netbox-scanner',
     packages=setuptools.find_packages(),
     classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
     ],
 )

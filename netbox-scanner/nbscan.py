@@ -40,7 +40,8 @@ class NetBoxScanner(object):
         for host in nm.all_hosts():
             address = nm[host]['addresses']['ipv4']
             try:
-                description = self.get_description(nm[host]['hostnames'][0]['name'], 
+                description = self.get_description(
+                    nm[host]['hostnames'][0]['name'], 
                     nm[host]['osmatch'][0]['osclass'][0]['cpe'])
             except (KeyError, AttributeError, IndexError):
                 description = self.unknown
@@ -54,32 +55,39 @@ class NetBoxScanner(object):
         :return: nothing will be returned
         '''
         for net in networks:
-            logging.info('scanning network {}'.format(net))
+            logging.info('scan: {}'.format(net))
             hosts = self.scan(net)
             for host in hosts:
-                nbhost = self.netbox.ipam.get_ip_addresses(address=host['address'])
+                nbhost = self.netbox.ipam.get_ip_addresses(
+                    address=host['address'])
                 if nbhost:
-                    if (self.tag in nbhost[0]['tags']) and (host['description'] != 
-                        nbhost[0]['description']):
-                        logging.warning('updating host {} ({}) to: {}'.format(
+                    if (self.tag in nbhost[0]['tags']) and (
+                        host['description'] != nbhost[0]['description']):
+                        logging.warning('update: {} "{}" -> "{}"'.format(
                             host['address'], nbhost[0]['description'],
                             host['description']))
-                        self.netbox.ipam.update_ip('{}/32'.format(host['address']), 
-                            description=host['description'])
+                        self.netbox.ipam.update_ip('{}/32'.format(
+                            host['address']), description=host['description'])
                 else:
-                    logging.info('creating host {} ({})'.format(host['address'], 
+                    logging.info('create: {} "{}"'.format(host['address'], 
                         host['description']))
-                    self.netbox.ipam.create_ip_address('{}/32'.format(host['address']), 
+                    self.netbox.ipam.create_ip_address(
+                        '{}/32'.format(host['address']), 
                         tags=[self.tag], description=host['description'])
             
             for ipv4 in IPv4Network(net):
                 address = str(ipv4)
                 if not any(h['address'] == address for h in hosts):
-                    nbhost = self.netbox.ipam.get_ip_addresses(address=address)
+                    nbhost = self.netbox.ipam.get_ip_addresses(
+                        address=address)
                     try:
                         if self.tag in nbhost[0]['tags']:
-                            logging.warning('deleting host {} ({})'.format(
-                                host['address'], host['description']))
+                            logging.warning('delete: {} "{}"'.format(
+                                nbhost[0]['address'], 
+                                nbhost[0]['description']))
                             self.netbox.ipam.delete_ip_address(address)
+                        else:
+                            logging.info('undiscovered: {}'.format(
+                                nbhost[0]['address']))
                     except IndexError:
                         pass

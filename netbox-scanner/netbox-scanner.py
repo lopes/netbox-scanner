@@ -3,13 +3,16 @@
 import logging
 from sys import stdout, stderr
 from argparse import ArgumentParser
+from datetime import datetime
 
 import config
 from nbscan import NetBoxScanner
 
 
-logging.basicConfig(filename='netbox-scanner.log', level=logging.INFO,
-    format='%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s')
+logging.basicConfig(filename='netbox-scanner-{}.log'.format(
+    datetime.now().strftime('%Y%m%dT%H%M%SZ')),
+    level=logging.INFO, 
+    format='%(asctime)s\tnetbox-scanner\t%(levelname)s\t%(message)s')
 
 argp = ArgumentParser()
 argp.add_argument('-a', '--address', help='netbox address', 
@@ -32,7 +35,7 @@ args = argp.parse_args()
 
 nbs = NetBoxScanner(args.address, args.tls, args.token, args.port, 
     args.tag, args.unknown, args.warnings)
-
 nbs.sync(args.networks)
+logging.info('finished')
 
 exit(0)
