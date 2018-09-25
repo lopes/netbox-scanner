@@ -1,22 +1,17 @@
 import logging
-from urllib3 import disable_warnings
-from urllib3.exceptions import InsecureRequestWarning
 from ipaddress import IPv4Network
 
 from nmap import PortScanner
 from cpe import CPE
-from netbox import NetBox
+from pynetbox import api
 
 
 class NetBoxScanner(object):
     
-    def __init__(self, host, tls, token, port, tag, unknown, warnings=True):
-        self.netbox = NetBox(host=host, use_ssl=tls, auth_token=token,
-            port=port)
+    def __init__(self, address, token, tls_verify, tag, unknown):
+        self.netbox = api(address, token=token, ssl_verify=tls_verify)
         self.tag = tag
         self.unknown = unknown
-        if warnings:
-            disable_warnings(InsecureRequestWarning)
     
     def get_description(self, name, cpe):
         if name:
@@ -25,6 +20,21 @@ class NetBoxScanner(object):
             c = CPE(cpe[0], CPE.VERSION_2_3)
             return '{}.{}.{}'.format(c.get_vendor()[0], 
                 c.get_product()[0], c.get_version()[0])
+    
+    def nbhandler(self, command, **kwargs):
+        if command == 'get':
+            return self.netbox.ipam.ip_addresses.get(
+                address=kwargs['address'])
+        elif command == 'create':
+            self.netbox.ipam.ip_addresses.create(address=kwargs['address'], 
+                tags=kwargs['tag'], description=kwargs['description'])
+        elif command == 'update':
+            kwargs['nbhost'].description = kwargs['description']
+            kwargs['nbhost'].save()
+        elif command == 'delete':
+            kwargs['nbhost'].delete()
+        else:
+            raise AttributeError
             
     def scan(self, network):
         '''Scan a network.
@@ -54,40 +64,48 @@ class NetBoxScanner(object):
         :param networks: a list of valid networks, like ['10.0.0.0/8']
         :return: nothing will be returned
         '''
+        create = update = delete = undiscovered = duplicate = 0
         for net in networks:
             logging.info('scan: {}'.format(net))
             hosts = self.scan(net)
             for host in hosts:
-                nbhost = self.netbox.ipam.get_ip_addresses(
-                    address=host['address'])
+                try:
+                    nbhost = self.nbhandler('get', address=host['address'])
+                except ValueError:
+                    logging.error('duplicate: {}/32'.format(host['address']))
+                    duplicate += 1
+                    continue
                 if nbhost:
-                    if (self.tag in nbhost[0]['tags']) and (
-                        host['description'] != nbhost[0]['description']):
+                    if (self.tag in nbhost.tags) and (
+                        host['description'] != nbhost.description):
                         logging.warning('update: {} "{}" -> "{}"'.format(
-                            host['address'], nbhost[0]['description'],
+                            str(nbhost.address), nbhost.description, 
                             host['description']))
-                        self.netbox.ipam.update_ip('{}/32'.format(
-                            host['address']), description=host['description'])
+                        self.nbhandler('update', nbhost=nbhost, 
+                            description=host['description'])
+                        update += 1
                 else:
-                    logging.info('create: {} "{}"'.format(host['address'], 
+                    logging.info('create: {}/32 "{}"'.format(host['address'], 
                         host['description']))
-                    self.netbox.ipam.create_ip_address(
-                        '{}/32'.format(host['address']), 
-                        tags=[self.tag], description=host['description'])
+                    self.netbox.ipam.ip_addresses.create(
+                        address=host['address'], tags=[self.tag], 
+                        description=host['description'])
+                    create += 1
             
             for ipv4 in IPv4Network(net):
                 address = str(ipv4)
                 if not any(h['address'] == address for h in hosts):
-                    nbhost = self.netbox.ipam.get_ip_addresses(
-                        address=address)
+                    nbhost = self.nbhandler('get', address=address)
                     try:
-                        if self.tag in nbhost[0]['tags']:
+                        if self.tag in nbhost.tags:
                             logging.warning('delete: {} "{}"'.format(
-                                nbhost[0]['address'], 
-                                nbhost[0]['description']))
-                            self.netbox.ipam.delete_ip_address(address)
+                                nbhost.address, nbhost.description))
+                            self.nbhandler('delete', nbhost=nbhost)
+                            delete += 1
                         else:
                             logging.info('undiscovered: {}'.format(
-                                nbhost[0]['address']))
-                    except IndexError:
+                                nbhost.address))
+                            undiscovered += 1
+                    except AttributeError:
                         pass
+        return (create, update, delete, undiscovered, duplicate)
