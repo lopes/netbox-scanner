@@ -14,6 +14,7 @@ class NetBoxScanner(object):
         self.unknown = unknown
     
     def get_description(self, name, cpe):
+        '''Define a description based on hostname and CPE'''
         if name:
             return name
         else:
@@ -22,6 +23,7 @@ class NetBoxScanner(object):
                 c.get_product()[0], c.get_version()[0])
     
     def nbhandler(self, command, **kwargs):
+        '''Handles NetBox integration'''
         if command == 'get':
             return self.netbox.ipam.ip_addresses.get(
                 address=kwargs['address'])
@@ -41,7 +43,7 @@ class NetBoxScanner(object):
         
         :param network: a valid network, like 10.0.0.0/8
         :return: a list with dictionaries of responsive 
-        hosts (addr and description)
+        hosts (address and description)
         '''
         hosts = []
         nm = PortScanner()
@@ -62,7 +64,7 @@ class NetBoxScanner(object):
         '''Scan some networks and sync them to NetBox.
 
         :param networks: a list of valid networks, like ['10.0.0.0/8']
-        :return: nothing will be returned
+        :return: synching statistics are returned as a tuple
         '''
         create = update = delete = undiscovered = duplicate = 0
         for net in networks:
@@ -103,7 +105,7 @@ class NetBoxScanner(object):
                             self.nbhandler('delete', nbhost=nbhost)
                             delete += 1
                         else:
-                            logging.info('undiscovered: {} "{}"'.format(
+                            logging.warning('undiscovered: {} "{}"'.format(
                                 nbhost.address, nbhost.description))
                             undiscovered += 1
                     except AttributeError:

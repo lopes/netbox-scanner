@@ -1,7 +1,7 @@
 # netbox-scanner configuration file.
 
 NETBOX = {
-    'ADDRESS': '',
+    'ADDRESS': 'https://',
     'TOKEN': '',
     'TLS_VERIFY': True
 }
