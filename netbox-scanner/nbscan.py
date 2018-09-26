@@ -66,8 +66,8 @@ class NetBoxScanner(object):
         '''
         create = update = delete = undiscovered = duplicate = 0
         for net in networks:
-            logging.info('scan: {}'.format(net))
             hosts = self.scan(net)
+            logging.info('scan: {} ({} hosts discovered)'.format(net, len(hosts)))
             for host in hosts:
                 try:
                     nbhost = self.nbhandler('get', address=host['address'])
@@ -103,8 +103,8 @@ class NetBoxScanner(object):
                             self.nbhandler('delete', nbhost=nbhost)
                             delete += 1
                         else:
-                            logging.info('undiscovered: {}'.format(
-                                nbhost.address))
+                            logging.info('undiscovered: {} "{}"'.format(
+                                nbhost.address, nbhost.description))
                             undiscovered += 1
                     except AttributeError:
                         pass
