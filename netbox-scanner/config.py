@@ -12,7 +12,7 @@ NETBOX = {
 
 DEVICE_AUTH = {
     'CISCO': {
-        'USER': '', 
+        'USER': 'netbox', 
         'PASSWORD': '',
         'COMMAND': 'show run | inc hostname'
     }

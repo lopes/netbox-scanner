@@ -38,7 +38,8 @@ class NetBoxScanner(object):
                     return '{}: {}'.format(vendor.lower(),
                         re.search(r'hostname ([A-Z|a-z|0-9|\-|_]+)', 
                             str(stdout.read().decode('utf-8'))).group(1))
-                except (AuthenticationException, SSHException, NoValidConnectionsError):
+                except (AuthenticationException, SSHException, 
+                    NoValidConnectionsError, TimeoutError):
                     pass  
             return '{}.{}.{}'.format(c.get_vendor()[0], c.get_product()[0], 
                 c.get_version()[0])
