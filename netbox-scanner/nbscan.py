@@ -1,26 +1,47 @@
+import re
 import logging
 from ipaddress import IPv4Network
 
 from nmap import PortScanner
 from cpe import CPE
 from pynetbox import api
+from paramiko import SSHClient, AutoAddPolicy
+from paramiko.ssh_exception import AuthenticationException, SSHException, NoValidConnectionsError
+
+
+# paramiko is too noisy
+logging.getLogger('paramiko').setLevel(logging.CRITICAL)
 
 
 class NetBoxScanner(object):
     
-    def __init__(self, address, token, tls_verify, tag, unknown):
+    def __init__(self, address, token, tls_verify, devs_auth, tag, unknown):
         self.netbox = api(address, token=token, ssl_verify=tls_verify)
+        self.devs = devs_auth
         self.tag = tag
         self.unknown = unknown
     
-    def get_description(self, name, cpe):
+    def get_description(self, address, name, cpe):
         '''Define a description based on hostname and CPE'''
         if name:
             return name
         else:
             c = CPE(cpe[0], CPE.VERSION_2_3)
-            return '{}.{}.{}'.format(c.get_vendor()[0], 
-                c.get_product()[0], c.get_version()[0])
+            vendor = c.get_vendor()[0].upper()
+            if vendor in self.devs:
+                try:
+                    client = SSHClient()
+                    client.set_missing_host_key_policy(AutoAddPolicy())
+                    client.connect(address, username=self.devs[vendor]['USER'], 
+                        password=self.devs[vendor]['PASSWORD'])
+                    stdin, stdout, stderr = client.exec_command(self.devs[vendor]['COMMAND'])
+                    return '{}: {}'.format(vendor.lower(),
+                        re.search(r'hostname ([A-Z|a-z|0-9|\-|_]+)', 
+                            str(stdout.read().decode('utf-8'))).group(1))
+                except (AuthenticationException, SSHException, NoValidConnectionsError):
+                    pass  
+            return '{}.{}.{}'.format(c.get_vendor()[0], c.get_product()[0], 
+                c.get_version()[0])
     
     def nbhandler(self, command, **kwargs):
         '''Handles NetBox integration'''
@@ -53,7 +74,7 @@ class NetBoxScanner(object):
             address = nm[host]['addresses']['ipv4']
             try:
                 description = self.get_description(
-                    nm[host]['hostnames'][0]['name'], 
+                    address, nm[host]['hostnames'][0]['name'], 
                     nm[host]['osmatch'][0]['osclass'][0]['cpe'])
             except (KeyError, AttributeError, IndexError):
                 description = self.unknown
