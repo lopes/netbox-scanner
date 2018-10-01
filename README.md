@@ -6,7 +6,7 @@ A scanner util for NetBox, because certain networks can be updated automagically
 
     $ pip3 install netbox-scanner
 
-Another way is download from GitHub:
+Another way is to download from GitHub:
 
     $ wget https://github.com/forkd/netbox-scanner/archive/master.zip
     $ unzip netbox-scanner-master.zip -d netbox-scanner
@@ -30,7 +30,7 @@ Note that `netbox-scanner` will require Nmap and an instance of NetBox ready to 
     2. If host is not in NetBox, it'll be created.
 3. It will iterate through each network to find and delete any hosts registered in NetBox that did not respond to scan, and have the tag `netbox-scanner/config.py/TAG`.
 
-This way, if some hosts in your monitored networks are eventually down, but you don't want to delete them, just make sure that they doesn't have the `netbox-scanner/config.py/TAG` tag.
+This way, if some hosts in your monitored networks are eventually down, but you don't want to delete them, just make sure that they doesn't have the tag defined in `netbox-scanner/config.py/TAG`.
 
 To see a list of all available parameters in `netbox-scanner.py`, simple use the `-h` option --please note that all parameters are optional, because all of them can be set using `netbox-scanner/config.py` file:
 

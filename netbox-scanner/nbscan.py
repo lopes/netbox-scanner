@@ -119,8 +119,8 @@ class NetBoxScanner(object):
             for ipv4 in IPv4Network(net):
                 address = str(ipv4)
                 if not any(h['address'] == address for h in hosts):
-                    nbhost = self.nbhandler('get', address=address)
                     try:
+                        nbhost = self.nbhandler('get', address=address)
                         if self.tag in nbhost.tags:
                             logging.warning('delete: {} "{}"'.format(
                                 nbhost.address, nbhost.description))
@@ -130,6 +130,6 @@ class NetBoxScanner(object):
                             logging.warning('undiscovered: {} "{}"'.format(
                                 nbhost.address, nbhost.description))
                             undiscovered += 1
-                    except AttributeError:
+                    except (AttributeError, ValueError):
                         pass
         return (create, update, delete, undiscovered, duplicate)
