@@ -1,16 +1,18 @@
 import re
 import logging
+
 from ipaddress import IPv4Network
 
 from nmap import PortScanner
 from cpe import CPE
 from pynetbox import api
 from paramiko import SSHClient, AutoAddPolicy
-from paramiko.ssh_exception import AuthenticationException, SSHException, NoValidConnectionsError
+from paramiko.ssh_exception import AuthenticationException
+from paramiko.ssh_exception import SSHException
+from paramiko.ssh_exception import NoValidConnectionsError
 
 
-# paramiko is too noisy
-logging.getLogger('paramiko').setLevel(logging.CRITICAL)
+logging.getLogger('paramiko').setLevel(logging.CRITICAL)  # paramiko is noisy
 
 
 class NetBoxScanner(object):
@@ -20,6 +22,8 @@ class NetBoxScanner(object):
         self.devs = devs_auth
         self.tag = tag
         self.unknown = unknown
+        self.stats = {'created':0, 'updated':0, 'deleted':0,
+            'undiscovered':0, 'duplicated':0}
     
     def get_description(self, address, name, cpe):
         '''Define a description based on hostname and CPE'''
@@ -35,37 +39,20 @@ class NetBoxScanner(object):
                     client.connect(address, username=self.devs[vendor]['USER'], 
                         password=self.devs[vendor]['PASSWORD'])
                     stdin, stdout, stderr = client.exec_command(self.devs[vendor]['COMMAND'])
-                    return '{}: {}'.format(vendor.lower(),
-                        re.search(r'hostname ([A-Z|a-z|0-9|\-|_]+)', 
-                            str(stdout.read().decode('utf-8'))).group(1))
+                    return '{}:{}'.format(vendor.lower(),
+                        re.search(self.devs[vendor]['REGEX'], 
+                        str(stdout.read().decode('utf-8'))).group(self.devs[vendor]['REGROUP']))
                 except (AuthenticationException, SSHException, 
                     NoValidConnectionsError, TimeoutError):
                     pass  
             return '{}.{}.{}'.format(c.get_vendor()[0], c.get_product()[0], 
                 c.get_version()[0])
     
-    def nbhandler(self, command, **kwargs):
-        '''Handles NetBox integration'''
-        if command == 'get':
-            return self.netbox.ipam.ip_addresses.get(
-                address=kwargs['address'])
-        elif command == 'create':
-            self.netbox.ipam.ip_addresses.create(address=kwargs['address'], 
-                tags=kwargs['tag'], description=kwargs['description'])
-        elif command == 'update':
-            kwargs['nbhost'].description = kwargs['description']
-            kwargs['nbhost'].save()
-        elif command == 'delete':
-            kwargs['nbhost'].delete()
-        else:
-            raise AttributeError
-            
     def scan(self, network):
         '''Scan a network.
         
         :param network: a valid network, like 10.0.0.0/8
-        :return: a list with dictionaries of responsive 
-        hosts (address and description)
+        :return: a list of tuples like [('10.0.0.1','Gateway'),...].
         '''
         hosts = []
         nm = PortScanner()
@@ -79,57 +66,85 @@ class NetBoxScanner(object):
                     nm[host]['osmatch'][0]['osclass'][0]['cpe'])
             except (KeyError, AttributeError, IndexError):
                 description = self.unknown
-            hosts.append({'address':address,'description':description})
+            hosts.append((address, description))
         return hosts
-    
+
+    def logger(self, logtype, **kwargs):
+        '''Logs and updates stats for NetBox interactions.'''
+        if logtype == 'created':
+            logging.info('created: {}/32 "{}"'.format(kwargs['address'], 
+                kwargs['description']))
+            self.stats['created'] += 1
+        elif logtype == 'updated':
+            logging.warning('updated: {}/32 "{}" -> "{}"'.format(
+                kwargs['address'], kwargs['description_old'], 
+                kwargs['description_new']))
+            self.stats['updated'] += 1
+        elif logtype == 'deleted':
+            logging.warning('deleted: {} "{}"'.format(kwargs['address'], 
+                kwargs['description']))
+            self.stats['deleted'] += 1
+        elif logtype == 'undiscovered':
+            logging.warning('undiscovered: {} "{}"'.format(kwargs['address'], 
+                kwargs['description']))
+            self.stats['undiscovered'] += 1
+        elif logtype == 'duplicated':
+            logging.error('duplicated: {}/32'.format(kwargs['address']))
+            self.stats['duplicated'] += 1            
+
+    def sync_host(self, host):
+        '''Syncs a single host to NetBox.
+
+        :param host: a tuple like ('10.0.0.1','Gateway')
+        :return: True if syncing is ok or False in other case.
+        '''
+        try:
+            nbhost = self.netbox.ipam.ip_addresses.get(address=host[0])
+        except ValueError:
+            self.logger('duplicated', address=host[0])
+            return False
+        if nbhost:
+            if (self.tag in nbhost.tags) and (host[1] != nbhost.description):
+                aux = nbhost.description
+                nbhost.description = host[1]
+                nbhost.save()
+                self.logger('updated', address=host[0], description_old=aux, 
+                    description_new=host[1])
+        else:
+            self.netbox.ipam.ip_addresses.create(address=host[0], 
+                tags=[self.tag], description=host[0])
+            self.logger('created', address=host[0], description=host[1])
+        return True
+
     def sync(self, networks):
         '''Scan some networks and sync them to NetBox.
 
         :param networks: a list of valid networks, like ['10.0.0.0/8']
         :return: synching statistics are returned as a tuple
         '''
-        create = update = delete = undiscovered = duplicate = 0
+        for s in self.stats:
+            self.stats[s] = 0
         for net in networks:
             hosts = self.scan(net)
-            logging.info('scan: {} ({} hosts discovered)'.format(net, len(hosts)))
+            logging.info('scan: {} ({} hosts discovered)'.format(net, 
+                len(hosts)))
             for host in hosts:
-                try:
-                    nbhost = self.nbhandler('get', address=host['address'])
-                except ValueError:
-                    logging.error('duplicate: {}/32'.format(host['address']))
-                    duplicate += 1
-                    continue
-                if nbhost:
-                    if (self.tag in nbhost.tags) and (
-                        host['description'] != nbhost.description):
-                        logging.warning('update: {} "{}" -> "{}"'.format(
-                            str(nbhost.address), nbhost.description, 
-                            host['description']))
-                        self.nbhandler('update', nbhost=nbhost, 
-                            description=host['description'])
-                        update += 1
-                else:
-                    logging.info('create: {}/32 "{}"'.format(host['address'], 
-                        host['description']))
-                    self.netbox.ipam.ip_addresses.create(
-                        address=host['address'], tags=[self.tag], 
-                        description=host['description'])
-                    create += 1
+                self.sync_host(host)
             
-            for ipv4 in IPv4Network(net):
+            for ipv4 in IPv4Network(net):  # cleanup
                 address = str(ipv4)
-                if not any(h['address'] == address for h in hosts):
+                if not any(h[0]==address for h in hosts):
                     try:
-                        nbhost = self.nbhandler('get', address=address)
+                        nbhost = self.netbox.ipam.ip_addresses.get(address=address)
                         if self.tag in nbhost.tags:
-                            logging.warning('delete: {} "{}"'.format(
-                                nbhost.address, nbhost.description))
-                            self.nbhandler('delete', nbhost=nbhost)
-                            delete += 1
+                            nbhost.delete()
+                            self.logger('deleted', address=nbhost.address, 
+                                description=nbhost.description)
                         else:
-                            logging.warning('undiscovered: {} "{}"'.format(
-                                nbhost.address, nbhost.description))
-                            undiscovered += 1
+                            self.logger('undiscovered', address=nbhost.address, 
+                                description=nbhost.description)
                     except (AttributeError, ValueError):
                         pass
-        return (create, update, delete, undiscovered, duplicate)
+        return (self.stats['created'], self.stats['updated'], 
+            self.stats['deleted'], self.stats['undiscovered'], 
+            self.stats['duplicated'])

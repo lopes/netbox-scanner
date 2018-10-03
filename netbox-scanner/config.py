@@ -11,11 +11,13 @@ NETBOX = {
 }
 
 DEVICE_AUTH = {
-    'CISCO': {
-        'USER': 'netbox', 
-        'PASSWORD': '',
-        'COMMAND': 'show run | inc hostname'
-    }
+    # 'CISCO': {
+    #     'USER': 'netbox', 
+    #     'PASSWORD': '',
+    #     'COMMAND': 'show run | inc hostname',
+    #     'REGEX': r'hostname ([A-Z|a-z|0-9|\-|_]+)',
+    #     'REGROUP': 1
+    # }
 }
 
 # These are the networks to be scanned.

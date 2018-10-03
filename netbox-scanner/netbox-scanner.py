@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-from sys import stdout, stderr
 from argparse import ArgumentParser
 from datetime import datetime
 from urllib3 import disable_warnings
@@ -36,7 +35,8 @@ logging.basicConfig(filename='{}/netbox-scanner-{}.log'.format(args.log,
 
 disable_warnings(InsecureRequestWarning)
 
-nbs = NetBoxScanner(args.address, args.token, args.verify, args.devices, args.tag, args.unknown)
+nbs = NetBoxScanner(args.address, args.token, args.verify, args.devices, 
+    args.tag, args.unknown)
 logging.info('started: {} networks'.format(len(args.networks)))
 stats = nbs.sync(args.networks)
 logging.info('finished: +{} ~{} -{} ?{} !{}'.format(stats[0], stats[1], 
