@@ -3,6 +3,7 @@
 TAG = 'auto'
 UNKNOWN = 'UNKNOWN HOST'
 LOG = '.'  # path to logfile
+NMAP_ARGS = '-T4 -O -F --host-timeout 30s'
 
 NETBOX = {
     'ADDRESS': 'https://',

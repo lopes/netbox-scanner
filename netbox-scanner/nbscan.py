@@ -17,8 +17,9 @@ logging.getLogger('paramiko').setLevel(logging.CRITICAL)  # paramiko is noisy
 
 class NetBoxScanner(object):
     
-    def __init__(self, address, token, tls_verify, devs_auth, tag, unknown):
+    def __init__(self, address, token, tls_verify, nmap_args, devs_auth, tag, unknown):
         self.netbox = api(address, token=token, ssl_verify=tls_verify)
+        self.nmap_args = nmap_args
         self.devs = devs_auth
         self.tag = tag
         self.unknown = unknown
@@ -56,7 +57,7 @@ class NetBoxScanner(object):
         '''
         hosts = []
         nm = PortScanner()
-        nm.scan(network, arguments='-T4 -O -F')
+        nm.scan(network, arguments=self.nmap_args)
 
         for host in nm.all_hosts():
             address = nm[host]['addresses']['ipv4']
