@@ -44,7 +44,8 @@ class NetBoxScanner(object):
                         re.search(self.devs[vendor]['REGEX'], 
                         str(stdout.read().decode('utf-8'))).group(self.devs[vendor]['REGROUP']))
                 except (AuthenticationException, SSHException, 
-                    NoValidConnectionsError, TimeoutError):
+                    NoValidConnectionsError, TimeoutError, 
+                    ConnectionResetError):
                     pass  
             return '{}.{}.{}'.format(c.get_vendor()[0], c.get_product()[0], 
                 c.get_version()[0])
