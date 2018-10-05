@@ -40,8 +40,9 @@ disable_warnings(InsecureRequestWarning)
 nbs = NetBoxScanner(args.address, args.token, args.verify, args.nmap, 
     args.devices, args.tag, args.unknown)
 logging.info('started: {} networks'.format(len(args.networks)))
-stats = nbs.sync(args.networks)
-logging.info('finished: +{} ~{} -{} ?{} !{}'.format(stats[0], stats[1], 
-    stats[2], stats[3], stats[4]))
+nbs.sync(args.networks)
+logging.info('finished: +{} ~{} -{} ?{} !{}'.format(nbs.stats['created'], 
+    nbs.stats['updated'], nbs.stats['deleted'], nbs.stats['undiscovered'], 
+    nbs.stats['duplicated']))
 
 exit(0)

@@ -26,6 +26,22 @@ class NetBoxScanner(object):
         self.stats = {'created':0, 'updated':0, 'deleted':0,
             'undiscovered':0, 'duplicated':0}
     
+    def parser(self, networks):
+        '''Parses a list of networks in CIDR notation.
+
+        :param networks: a list of networks like ['10.0.0.0/8',...]
+        :return: False if parsing is OK, or a string with duplicated
+        or mistyped networks.
+        '''
+        ipv4 = re.compile(r'^((2([0-4][0-9]|5[0-5])|1?[0-9]?[0-9])\.){3}(2([0-4][0-9]|5[0-5])|1?[0-9]?[0-9])\/(3[012]|[12]?[0-9])$')
+        duplicated = set([x for x in networks if networks.count(x)>1])
+        if duplicated:
+            return ', '.join(duplicated)
+        for net in networks:
+            if not re.match(ipv4, net):
+                return net
+        return False
+    
     def get_description(self, address, name, cpe):
         '''Define a description based on hostname and CPE'''
         if name:
@@ -73,7 +89,9 @@ class NetBoxScanner(object):
 
     def logger(self, logtype, **kwargs):
         '''Logs and updates stats for NetBox interactions.'''
-        if logtype == 'created':
+        if logtype == 'scanned':
+            logging.info('scanned: {} ({} hosts discovered)'.format(kwargs['net'], kwargs['hosts']))
+        elif logtype == 'created':
             logging.info('created: {}/32 "{}"'.format(kwargs['address'], 
                 kwargs['description']))
             self.stats['created'] += 1
@@ -92,7 +110,9 @@ class NetBoxScanner(object):
             self.stats['undiscovered'] += 1
         elif logtype == 'duplicated':
             logging.error('duplicated: {}/32'.format(kwargs['address']))
-            self.stats['duplicated'] += 1            
+            self.stats['duplicated'] += 1
+        elif logtype == 'mistyped':
+            logging.error('mistyped: {}'.format(kwargs['badnets']))
 
     def sync_host(self, host):
         '''Syncs a single host to NetBox.
@@ -122,14 +142,19 @@ class NetBoxScanner(object):
         '''Scan some networks and sync them to NetBox.
 
         :param networks: a list of valid networks, like ['10.0.0.0/8']
-        :return: synching statistics are returned as a tuple
+        :return: synching statistics
         '''
         for s in self.stats:
             self.stats[s] = 0
+        
+        parsing = self.parser(networks)
+        if parsing:
+            self.logger('mistyped', badnets=parsing)
+            return False
+
         for net in networks:
             hosts = self.scan(net)
-            logging.info('scan: {} ({} hosts discovered)'.format(net, 
-                len(hosts)))
+            self.logger('scanned', net=net, hosts=len(hosts))
             for host in hosts:
                 self.sync_host(host)
             
@@ -147,6 +172,5 @@ class NetBoxScanner(object):
                                 description=nbhost.description)
                     except (AttributeError, ValueError):
                         pass
-        return (self.stats['created'], self.stats['updated'], 
-            self.stats['deleted'], self.stats['undiscovered'], 
-            self.stats['duplicated'])
+
+        return True
