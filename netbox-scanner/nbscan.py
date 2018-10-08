@@ -134,7 +134,7 @@ class NetBoxScanner(object):
                     description_new=host[1])
         else:
             self.netbox.ipam.ip_addresses.create(address=host[0], 
-                tags=[self.tag], description=host[0])
+                tags=[self.tag], description=host[1])
             self.logger('created', address=host[0], description=host[1])
         return True
 
