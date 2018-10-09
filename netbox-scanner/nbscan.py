@@ -82,7 +82,8 @@ class NetBoxScanner(object):
                 description = self.get_description(
                     address, nm[host]['hostnames'][0]['name'], 
                     nm[host]['osmatch'][0]['osclass'][0]['cpe'])
-            except (KeyError, AttributeError, IndexError):
+            except (KeyError, AttributeError, IndexError, 
+                NotImplementedError):
                 description = self.unknown
             hosts.append((address, description))
         return hosts
@@ -156,8 +157,7 @@ class NetBoxScanner(object):
             hosts = self.scan(net)
             self.logger('scanned', net=net, hosts=len(hosts))
             for host in hosts:
-                self.sync_host(host)
-            
+                self.sync_host(host)       
             for ipv4 in IPv4Network(net):  # cleanup
                 address = str(ipv4)
                 if not any(h[0]==address for h in hosts):
@@ -172,5 +172,4 @@ class NetBoxScanner(object):
                                 description=nbhost.description)
                     except (AttributeError, ValueError):
                         pass
-
         return True
