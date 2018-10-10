@@ -41,6 +41,10 @@ class NetBoxScanner(object):
             if not re.match(ipv4, net):
                 return net
         return False
+
+    def get_networks(self):
+        '''Retrieves all networks/prefixes recorded into NetBox.'''
+        return [str(net) for net in self.netbox.ipam.prefixes.all()]
     
     def get_description(self, address, name, cpe):
         '''Define a description based on hostname and CPE'''

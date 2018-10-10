@@ -1,3 +1,10 @@
+# This script can be used sanitize the list of networks
+# to be scanned.  In practice, (almost) the same routine 
+# is executed everytime NetBoxScanner().sync() is
+# called, but if you want to debug this list or even
+# keep a more organized version, you can use dac.py.
+##
+
 import re
 
 from config import NETWORKS
