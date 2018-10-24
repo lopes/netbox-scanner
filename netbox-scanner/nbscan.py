@@ -17,10 +17,11 @@ logging.getLogger('paramiko').setLevel(logging.CRITICAL)  # paramiko is noisy
 
 class NetBoxScanner(object):
     
-    def __init__(self, address, token, tls_verify, nmap_args, devs_auth, tag, unknown):
+    def __init__(self, address, token, tls_verify, nmap_args, tacacs, tag, 
+        unknown):
         self.netbox = api(address, token=token, ssl_verify=tls_verify)
         self.nmap_args = nmap_args
-        self.devs = devs_auth
+        self.tacacs = tacacs
         self.tag = tag
         self.unknown = unknown
         self.stats = {'created':0, 'updated':0, 'deleted':0,
@@ -52,17 +53,17 @@ class NetBoxScanner(object):
             return name
         else:
             c = CPE(cpe[0], CPE.VERSION_2_3)
-            vendor = c.get_vendor()[0].upper()
-            if vendor in self.devs:
+            vendor = c.get_vendor()[0]
+            if self.tacacs and vendor == 'cisco':
                 try:
                     client = SSHClient()
                     client.set_missing_host_key_policy(AutoAddPolicy())
-                    client.connect(address, username=self.devs[vendor]['USER'], 
-                        password=self.devs[vendor]['PASSWORD'])
-                    stdin, stdout, stderr = client.exec_command(self.devs[vendor]['COMMAND'])
+                    client.connect(address, username=self.tacacs['user'], 
+                        password=self.tacacs['password'])
+                    stdin,stdout,stderr = client.exec_command(self.tacacs['command'])
                     return '{}:{}'.format(vendor.lower(),
-                        re.search(self.devs[vendor]['REGEX'], 
-                        str(stdout.read().decode('utf-8'))).group(self.devs[vendor]['REGROUP']))
+                        re.search(self.tacacs['regex'], 
+                        str(stdout.read().decode('utf-8'))).group(self.tacacs['regroup']))
                 except (AuthenticationException, SSHException, 
                     NoValidConnectionsError, TimeoutError, 
                     ConnectionResetError):

@@ -20,31 +20,27 @@ Note that `netbox-scanner` will require [Nmap](https://nmap.org/) and an instanc
 
 
 ## Usage
-`netbox-scanner` can be used both in your Python programs or as a script.  To use `netbox-scanner` as a script, edit `netbox-scanner/config.py` with your setup, and run the command below:
+`netbox-scanner` can be used both in your Python programs or as a script.  To use `netbox-scanner` as a script, simply run `netbox-scanner/netbox-scanner.py` and it'll create its configuration file (`.netbox-scanner.conf`) in your home folder:
 
-    $ netbox-scanner.py
+    $ python netbox-scanner.py
+
+After that, you'll just need to edit that file with your environment settings and run the script again.
 
 `netbox-scanner` will do the following tasks:
 
-1. It will scan all networks defined in `netbox-scanner/config.py` or via parameters.
+1. It will scan all networks defined in the configuration file.
 2. For each discovered host it will:
-    1. If host is in NetBox, description is different, and `tag` is equal to `netbox-scanner/config.py/TAG`, it's description will be updated.
+    1. If host is in NetBox, description is different, and `tag` is equal to that defined in the configuration file, it's description will be updated in NetBox.
     2. If host is not in NetBox, it'll be created.
-3. It will iterate through each network to find and delete any hosts registered in NetBox that did not respond to scan, and have the tag `netbox-scanner/config.py/TAG`.
+3. It will iterate through each network to find and delete any hosts registered in NetBox that did not respond to scan, and have the tag defined in the configuration file.
 
-This way, if some hosts in your monitored networks are eventually down, but you don't want `netbox-scanner` to manage them, just make sure that they don't have the tag defined in `netbox-scanner/config.py/TAG`.
-
-To see a list of all available parameters in `netbox-scanner.py`, simple use the `-h` option --please note that all parameters are optional, because all of them can be set using `netbox-scanner/config.py` file:
-
-    $ netbox-scanner.py -h
+For instance, if some hosts in your monitored networks are eventually down, but you don't want `netbox-scanner` to manage them, just make sure that they **don't** have the tag defined in the configuration file.
 
 Of course, you can use `cron` to automatically run `netbox-scanner`.
 
 
 ## Configuration File
-`netbox-scanner` have a configuration file (`netbox-scanner/netbox-scanner/config.py`) with all parameters needed to scan networks and synchronize them to NetBox.  Before using `netbox-scanner/netbox-scannner/netbox-scanner.py` you should read that file and fill all variables according to your environment.
-
-It is strongly recommended that you use this file instead of passing parameters via command line, because it's easier and avoid common mistakes in multiple executions.  You should use command line parameters occasionally, in single scans.
+`netbox-scanner` have a configuration file with all parameters needed to scan networks and synchronize them to NetBox.  By default, this file is located at user's home folder and is created when `netbox-scanner.py` is executed for the first time.  Before using `netbox-scanner.py` you should edit that file and fill all variables according to your environment.
 
 
 ## License
