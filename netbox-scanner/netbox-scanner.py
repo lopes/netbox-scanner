@@ -3,6 +3,7 @@
 import logging
 
 from configparser import ConfigParser
+from argparse import ArgumentParser
 from os import fsync
 from os.path import expanduser
 from datetime import datetime
@@ -54,6 +55,11 @@ except KeyError:
     print('Fill all fields before run the script again.')
     exit(1)
 
+argp = ArgumentParser()
+argp.add_argument('-c', '--csv', 
+    help='import CSV file instead of scan network', default=None)
+args = argp.parse_args()
+
 logfile = '{}/netbox-scanner-{}.log'.format(general_conf['log'],
     datetime.now().strftime('%Y%m%dT%H%M%SZ'))
 logging.basicConfig(filename=logfile, level=logging.INFO, 
@@ -65,5 +71,8 @@ if __name__ == '__main__':
     nbs = NetBoxScanner(netbox_conf['address'], netbox_conf['token'], 
         netbox_conf.getboolean('tls_verify'), general_conf['nmap_args'], 
         tacacs_conf, general_conf['tag'], general_conf['unknown'])
-    nbs.sync(networks)
+    if not args.csv:
+        nbs.sync(networks)
+    else:
+        nbs.sync_csv(args.csv)
     exit(0)

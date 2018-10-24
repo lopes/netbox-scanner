@@ -5,6 +5,7 @@ from ipaddress import IPv4Network
 
 from nmap import PortScanner
 from cpe import CPE
+from csv import reader
 from pynetbox import api
 from paramiko import SSHClient, AutoAddPolicy
 from paramiko.ssh_exception import AuthenticationException
@@ -169,6 +170,40 @@ class NetBoxScanner(object):
                 except (AttributeError, ValueError):
                     pass
         return True
+    
+    def sync_csv(self, csvfile):
+        '''Imports a CSV file to NetBox.
+
+        :param csvfile: a CSV file with the following format:
+            IP addr,Description
+            10.0.0.1,Gateway
+            10.0.0.2,Server
+            ...
+            Note that this CSV file doesn't expect mask on
+            IP addresses, because all of them are processed
+            as /32.
+        :return: True if syncing is ok or False in other case.
+        '''
+        hosts = []
+        with open(csvfile,'r') as f:
+            next(f)
+            hosts = [(f'{data[0]}/32',data[1]) for data in 
+                reader(f,delimiter=',')]
+
+        for s in self.stats:
+            self.stats[s] = 0
+        parsing = self.parser([h[0] for h in hosts])
+        if parsing:
+            self.logger('mistyped', badnets=parsing)
+            return False
+
+        logging.info('started: {} hosts via CSV'.format(len(hosts)))
+        for host in hosts:
+            self.sync_host(host)
+        logging.info('finished: +{} ~{} -{} ?{} !{}'.format(
+            self.stats['created'], self.stats['updated'], 
+            self.stats['deleted'], self.stats['undiscovered'], 
+            self.stats['duplicated']))
 
     def sync(self, networks):
         '''Scan some networks and sync them to NetBox.
@@ -182,7 +217,7 @@ class NetBoxScanner(object):
         if parsing:
             self.logger('mistyped', badnets=parsing)
             return False
-            
+
         logging.info('started: {} networks'.format(len(networks)))
         for network in networks:
             self.sync_network(network)
