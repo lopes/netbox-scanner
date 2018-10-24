@@ -143,6 +143,32 @@ class NetBoxScanner(object):
                 tags=[self.tag], description=host[1])
             self.logger('created', address=host[0], description=host[1])
         return True
+    
+    def sync_network(self, network):
+        '''Syncs a single network to NetBox.
+
+        :param network: a network with CIDR like '10.0.0.1/24'
+        :return: True if syncing is ok or False in other case.
+        '''
+        hosts = self.scan(network)
+        self.logger('scanned', net=network, hosts=len(hosts))
+        for host in hosts:
+            self.sync_host(host)       
+        for ipv4 in IPv4Network(network):  # cleanup
+            address = str(ipv4)
+            if not any(h[0]==address for h in hosts):
+                try:
+                    nbhost = self.netbox.ipam.ip_addresses.get(address=address)
+                    if self.tag in nbhost.tags:
+                        nbhost.delete()
+                        self.logger('deleted', address=nbhost.address, 
+                            description=nbhost.description)
+                    else:
+                        self.logger('undiscovered', address=nbhost.address, 
+                            description=nbhost.description)
+                except (AttributeError, ValueError):
+                    pass
+        return True
 
     def sync(self, networks):
         '''Scan some networks and sync them to NetBox.
@@ -152,29 +178,15 @@ class NetBoxScanner(object):
         '''
         for s in self.stats:
             self.stats[s] = 0
-        
         parsing = self.parser(networks)
         if parsing:
             self.logger('mistyped', badnets=parsing)
             return False
-
-        for net in networks:
-            hosts = self.scan(net)
-            self.logger('scanned', net=net, hosts=len(hosts))
-            for host in hosts:
-                self.sync_host(host)       
-            for ipv4 in IPv4Network(net):  # cleanup
-                address = str(ipv4)
-                if not any(h[0]==address for h in hosts):
-                    try:
-                        nbhost = self.netbox.ipam.ip_addresses.get(address=address)
-                        if self.tag in nbhost.tags:
-                            nbhost.delete()
-                            self.logger('deleted', address=nbhost.address, 
-                                description=nbhost.description)
-                        else:
-                            self.logger('undiscovered', address=nbhost.address, 
-                                description=nbhost.description)
-                    except (AttributeError, ValueError):
-                        pass
+            
+        logging.info('started: {} networks'.format(len(networks)))
+        for network in networks:
+            self.sync_network(network)
+        logging.info('finished: +{} ~{} -{} ?{} !{}'.format(
+            self.stats['created'], self.stats['updated'], self.stats['deleted'], 
+            self.stats['undiscovered'], self.stats['duplicated']))
         return True

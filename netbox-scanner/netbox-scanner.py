@@ -5,7 +5,6 @@ import logging
 from configparser import ConfigParser
 from os import fsync
 from os.path import expanduser
-from getpass import getpass
 from datetime import datetime
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
@@ -59,7 +58,6 @@ logfile = '{}/netbox-scanner-{}.log'.format(general_conf['log'],
     datetime.now().strftime('%Y%m%dT%H%M%SZ'))
 logging.basicConfig(filename=logfile, level=logging.INFO, 
     format='%(asctime)s\tnetbox-scanner\t%(levelname)s\t%(message)s')
-
 disable_warnings(InsecureRequestWarning)
 
 
@@ -67,10 +65,5 @@ if __name__ == '__main__':
     nbs = NetBoxScanner(netbox_conf['address'], netbox_conf['token'], 
         netbox_conf.getboolean('tls_verify'), general_conf['nmap_args'], 
         tacacs_conf, general_conf['tag'], general_conf['unknown'])
-    logging.info('started: {} networks'.format(len(networks)))
     nbs.sync(networks)
-    logging.info('finished: +{} ~{} -{} ?{} !{}'.format(nbs.stats['created'], 
-        nbs.stats['updated'], nbs.stats['deleted'], nbs.stats['undiscovered'], 
-        nbs.stats['duplicated']))
-
-exit(0)
+    exit(0)
