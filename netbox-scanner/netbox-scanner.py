@@ -10,7 +10,7 @@ from datetime import datetime
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
-from nbscan import NetBoxScanner
+from nbscanner import NetBoxScanner
 
 
 template = '''
