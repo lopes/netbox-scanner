@@ -13,15 +13,15 @@ You can also download from GitHub:
     $ unzip netbox-scanner-master.zip -d netbox-scanner
     $ cd netbox-scanner
     $ pip install -r requirements.txt
-    $ python netbox-scanner/netbox-scanner.py
+    $ python netbox-scanner/nbscanner
 
 Note that `netbox-scanner` will require [Nmap](https://nmap.org/) and an instance of NetBox ready to use.
 
 
 ## Scanning the Network
-To use `netbox-scanner` as a script, simply run `netbox-scanner/netbox-scanner.py` and it'll create its configuration file (`.netbox-scanner.conf`) in your home folder:
+To use `netbox-scanner` as a script, simply run `netbox-scanner/nbscanner` and it'll create its configuration file (`.netbox-scanner.conf`) in your home folder:
 
-    $ python netbox-scanner.py
+    $ python nbscanner
 
 After that, you'll just need to edit that file with your environment settings and run the script again, and `netbox-scanner` will do the following tasks:
 
@@ -33,11 +33,11 @@ After that, you'll just need to edit that file with your environment settings an
 
 For instance, if some hosts in your monitored networks are eventually down, but you don't want `netbox-scanner` to manage them, just make sure that they **don't** have the tag defined in the configuration file.
 
-Of course, you can use `cron` to automatically run `netbox-scanner`.
+Of course, you can use `cron` to automatically run `nbscanner`.
 
 
 ## Configuration File
-`netbox-scanner` have a configuration file with all parameters needed to scan networks and synchronize them to NetBox.  By default, this file is located at user's home folder and is created when `netbox-scanner.py` is executed for the first time.  Before using `netbox-scanner.py` you should edit that file and fill all variables according to your environment.
+`netbox-scanner` have a configuration file with all parameters needed to scan networks and synchronize them to NetBox.  By default, this file is located at user's home folder and is created when `nbscanner` is executed for the first time.  Before using `nbscanner` you should edit that file and fill all variables according to your environment.
 
 
 ## Importing from CSV File
@@ -50,7 +50,7 @@ Of course, you can use `cron` to automatically run `netbox-scanner`.
 
 Note that the first line is header, IP addresses aren't in CIDR notation (a `/32` will be appended to all addresses automatically) and commas aren't accepted in description.  You can import this file using the `--csv` parameter, like this:
 
-    $ netbox-scanner.py --csv netbox.csv
+    $ nbscanner --csv netbox.csv
 
 
 ## License

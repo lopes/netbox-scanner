@@ -187,12 +187,12 @@ class NetBoxScanner(object):
         hosts = []
         with open(csvfile,'r') as f:
             next(f)
-            hosts = [(f'{data[0]}/32',data[1]) for data in 
+            hosts = [(data[0],data[1]) for data in 
                 reader(f,delimiter=',')]
 
         for s in self.stats:
             self.stats[s] = 0
-        parsing = self.parser([h[0] for h in hosts])
+        parsing = self.parser([f'{h[0]}/32' for h in hosts])
         if parsing:
             self.logger('mistyped', badnets=parsing)
             return False
