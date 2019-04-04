@@ -3,11 +3,7 @@ A scanner util for [NetBox](https://netbox.readthedocs.io/en/stable/), because c
 
 
 ## Installation
-`netbox-scanner` is available as a Python package via [PyPi](https://pypi.org/project/netbox-scanner/), so you can install it using `pip`:
-
-    $ pip3 install netbox-scanner
-
-You can also download from GitHub:
+`netbox-scanner` is compatible with Python 3.6+, and can be installed like this:
 
     $ wget https://github.com/forkd/netbox-scanner/archive/master.zip
     $ unzip netbox-scanner-master.zip -d netbox-scanner
@@ -15,7 +11,7 @@ You can also download from GitHub:
     $ pip install -r requirements.txt
     $ python netbox-scanner/nbscanner
 
-Note that `netbox-scanner` will require [Nmap](https://nmap.org/) and an instance of NetBox ready to use.
+Note that `netbox-scanner` will require [Nmap](https://nmap.org/) and an instance of NetBox (tested under NetBox 2.4.4) ready to use.
 
 
 ## Scanning the Network
