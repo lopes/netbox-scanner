@@ -154,21 +154,26 @@ class NetBoxScanner(object):
         hosts = self.scan(network)
         self.logger('scanned', net=network, hosts=len(hosts))
         for host in hosts:
-            self.sync_host(host)       
+            self.sync_host(host)
+
+        ips = list()
+        ips.append(self.netbox.ipam.ip_addresses.all())
+
         for ipv4 in IPv4Network(network):  # cleanup
             address = str(ipv4)
-            if not any(h[0]==address for h in hosts):
-                try:
-                    nbhost = self.netbox.ipam.ip_addresses.get(address=address)
-                    if self.tag in nbhost.tags:
-                        nbhost.delete()
-                        self.logger('deleted', address=nbhost.address, 
-                            description=nbhost.description)
-                    else:
-                        self.logger('undiscovered', address=nbhost.address, 
-                            description=nbhost.description)
-                except (AttributeError, ValueError):
-                    pass
+            if any(ip == address for ip in ips):
+                if not any(h[0]==address for h in hosts):
+                    try:
+                        nbhost = self.netbox.ipam.ip_addresses.get(address=address)
+                        if self.tag in nbhost.tags:
+                            nbhost.delete()
+                            self.logger('deleted', address=nbhost.address,
+                                description=nbhost.description)
+                        else:
+                            self.logger('undiscovered', address=nbhost.address,
+                                description=nbhost.description)
+                    except (AttributeError, ValueError):
+                        pass
         return True
     
     def sync_csv(self, csvfile):
