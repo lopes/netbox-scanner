@@ -129,6 +129,8 @@ class NetBoxScanner(object):
         '''
         try:
             nbhost = self.netbox.ipam.ip_addresses.get(address=host[0])
+            prefix = str(self.netbox.ipam.prefixes.get(contains=host[0]))
+            prefix = prefix.split("/")
         except ValueError:
             self.logger('duplicated', address=host[0])
             return False
@@ -140,9 +142,9 @@ class NetBoxScanner(object):
                 self.logger('updated', address=host[0], description_old=aux, 
                     description_new=host[1])
         else:
-            self.netbox.ipam.ip_addresses.create(address=host[0], 
+            self.netbox.ipam.ip_addresses.create(address=host[0] + "/" + str(prefix[1]), 
                 tags=[self.tag], description=host[1])
-            self.logger('created', address=host[0], description=host[1])
+            self.logger('created', address=host[0] + "/" + str(prefix[1]), description=host[1])
         return True
     
     def sync_network(self, network):
