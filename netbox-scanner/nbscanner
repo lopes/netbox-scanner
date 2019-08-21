@@ -19,7 +19,7 @@ tag       = auto
 vrf       = 
 unknown   = unknown host
 log       = .
-nmap_args = -T4 -O -F --host-timeout 30s
+nmap_args = -T4 -O -R -F --host-timeout 30s
 
 [NETBOX]
 address = https://
