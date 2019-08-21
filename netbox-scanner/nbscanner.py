@@ -28,7 +28,7 @@ class NetBoxScanner(object):
         self.unknown = unknown
         self.stats = {'created':0, 'updated':0, 'deleted':0,
             'undiscovered':0, 'duplicated':0}
-
+    
     def parser(self, networks):
         '''Parses a list of networks in CIDR notation.
 
@@ -48,7 +48,7 @@ class NetBoxScanner(object):
     def get_networks(self):
         '''Retrieves all networks/prefixes recorded into NetBox.'''
         return [str(net) for net in self.netbox.ipam.prefixes.all()]
-
+    
     def get_description(self, address, name, cpe):
         '''Define a description based on hostname and CPE'''
         if name:
@@ -60,22 +60,22 @@ class NetBoxScanner(object):
                 try:
                     client = SSHClient()
                     client.set_missing_host_key_policy(AutoAddPolicy())
-                    client.connect(address, username=self.tacacs['user'],
+                    client.connect(address, username=self.tacacs['user'], 
                         password=self.tacacs['password'])
                     stdin,stdout,stderr = client.exec_command(self.tacacs['command'])
                     return '{}:{}'.format(vendor.lower(),
-                        re.search(self.tacacs['regex'],
+                        re.search(self.tacacs['regex'], 
                         str(stdout.read().decode('utf-8'))).group(self.tacacs['regroup']))
-                except (AuthenticationException, SSHException,
-                    NoValidConnectionsError, TimeoutError,
+                except (AuthenticationException, SSHException, 
+                    NoValidConnectionsError, TimeoutError, 
                     ConnectionResetError):
-                    pass
-            return '{}.{}.{}'.format(c.get_vendor()[0], c.get_product()[0],
+                    pass  
+            return '{}.{}.{}'.format(c.get_vendor()[0], c.get_product()[0], 
                 c.get_version()[0])
-
+    
     def scan(self, network):
         '''Scan a network.
-
+        
         :param network: a valid network, like 10.0.0.0/8
         :return: a list of tuples like [('10.0.0.1','Gateway'),...].
         '''
@@ -106,7 +106,7 @@ class NetBoxScanner(object):
         if logtype == 'scanned':
             logging.info('scanned: {} ({} hosts discovered)'.format(kwargs['net'], kwargs['hosts']))
         elif logtype == 'created':
-            logging.info('created: {}/32 "{}"'.format(kwargs['address'],
+            logging.info('created: {}/32 "{}"'.format(kwargs['address'], 
                 kwargs['description']))
             self.stats['created'] += 1
         elif logtype == 'updated':
@@ -115,11 +115,11 @@ class NetBoxScanner(object):
                 kwargs['new']))
             self.stats['updated'] += 1
         elif logtype == 'deleted':
-            logging.warning('deleted: {} "{}"'.format(kwargs['address'],
+            logging.warning('deleted: {} "{}"'.format(kwargs['address'], 
                 kwargs['description']))
             self.stats['deleted'] += 1
         elif logtype == 'undiscovered':
-            logging.warning('undiscovered: {} "{}"'.format(kwargs['address'],
+            logging.warning('undiscovered: {} "{}"'.format(kwargs['address'], 
                 kwargs['description']))
             self.stats['undiscovered'] += 1
         elif logtype == 'duplicated':
@@ -128,19 +128,31 @@ class NetBoxScanner(object):
         elif logtype == 'mistyped':
             logging.error('mistyped: {}'.format(kwargs['badnets']))
 
-    def sync_host(self, host):
+    def sync_host(self, host, args_prefix):
         '''Syncs a single host to NetBox.
 
+        :param args_prefix: True or False depending on the chosen commandline argument
         :param host: a tuple like ('10.0.0.1','Gateway')
         :return: True if syncing is ok or False in other case.
         '''
         try:
-            nbhost = self.netbox.ipam.ip_addresses.get(address=host[0],vrf=[self.vrf])
-            prefix = str(self.netbox.ipam.prefixes.get(contains=host[0],vrf=[self.vrf]))
-            prefix = prefix.split("/")
+            if not self.vrf:
+                nbhost = self.netbox.ipam.ip_addresses.get(address=host[0])
+            else:
+                nbhost = self.netbox.ipam.ip_addresses.get(address=host[0],vrf=[self.vrf])
+            if args_prefix:
+                if not self.vrf:
+                    prefix = str(self.netbox.ipam.prefixes.get(contains=host[0]))
+                else:
+                    prefix = str(self.netbox.ipam.prefixes.get(contains=host[0],vrf=[self.vrf]))
+                prefix = prefix.split("/")
         except ValueError:
-            print("Duplicated",address=host[0],vrf=[self.vrf]) # Give some output..
-            self.logger('duplicated', address=host[0],vrf=[self.vrf])
+            if not self.vrf:
+                rint("Duplicated", host[0])  # Give some output..
+                self.logger('duplicated', address=host[0])
+            else:
+                print("Duplicated",host[0],"VRF:", self.vrf) # Give some output..
+                self.logger('duplicated', address=host[0],vrf=[self.vrf])
             return False
         if nbhost:
             # Update Description
@@ -158,23 +170,42 @@ class NetBoxScanner(object):
                 self.logger('updated', address=host[0], old=aux,
                     new=host[2])
         else:
-            print('adding host', host[0] + "/" + str(prefix[1]), self.vrf, host[2], host[1]) # Give some output..
-            vrfID = self.netbox.ipam.vrfs.get(name=self.vrf)
-            self.netbox.ipam.ip_addresses.create(address=host[0] + "/" + str(prefix[1]),
-                tags=[self.tag], vrf=vrfID.id, dns_name=host[2], description=host[1])
-            self.logger('created', address=host[0] + "/" + str(prefix[1]), vrf=self.vrf, dns_name=host[2], description=host[1])
+            if args_prefix:
+                if not self.vrf:
+                    print('adding host', host[0] + "/" + str(prefix[1]), "DNS:", host[2],"Description:", host[1])  # Give some output..
+                    self.netbox.ipam.ip_addresses.create(address=host[0] + "/" + str(prefix[1]),
+                                                         tags=[self.tag], dns_name=host[2], description=host[1])
+                    self.logger('created', address=host[0] + "/" + str(prefix[1]), dns_name=host[2], description=host[1])
+                else:
+                    print('adding host', host[0] + "/" + str(prefix[1]), self.vrf, host[2], host[1]) # Give some output..
+                    vrfID = self.netbox.ipam.vrfs.get(name=self.vrf)
+                    self.netbox.ipam.ip_addresses.create(address=host[0] + "/" + str(prefix[1]),
+                        tags=[self.tag], vrf=vrfID.id, dns_name=host[2], description=host[1])
+                    self.logger('created', address=host[0] + "/" + str(prefix[1]), vrf=self.vrf, dns_name=host[2], description=host[1])
+            else:
+                if not self.vrf:
+                    print('adding host', host[0], "DNS:", host[2], "Description:",
+                          host[1])  # Give some output..
+                    self.netbox.ipam.ip_addresses.create(address=host[0], tags=[self.tag], dns_name=host[2], description=host[1])
+                    self.logger('created', address=host[0], dns_name=host[2], description=host[1])
+                else:
+                    print('adding host', host[0], self.vrf, host[2], host[1])  # Give some output..
+                    vrfID = self.netbox.ipam.vrfs.get(name=self.vrf)
+                    self.netbox.ipam.ip_addresses.create(address=host[0], tags=[self.tag], vrf=vrfID.id, dns_name=host[2], description=host[1])
+                    self.logger('created', address=host[0], vrf=self.vrf, dns_name=host[2], description=host[1])
         return True
 
-    def sync_network(self, network):
+    def sync_network(self, network, args_prefix):
         '''Syncs a single network to NetBox.
 
+        :param args_prefix: True or False depending on the chosen commandline argument (Pass through to sync_host)
         :param network: a network with CIDR like '10.0.0.1/24'
         :return: True if syncing is ok or False in other case.
         '''
         hosts = self.scan(network)
         self.logger('scanned', net=network, hosts=len(hosts))
         for host in hosts:
-            self.sync_host(host)
+            self.sync_host(host, args_prefix)
 
         ips = list()
         ips.append(self.netbox.ipam.ip_addresses.all())
@@ -195,7 +226,7 @@ class NetBoxScanner(object):
                     except (AttributeError, ValueError):
                         pass
         return True
-
+    
     def sync_csv(self, csvfile):
         '''Imports a CSV file to NetBox.
 
@@ -212,7 +243,7 @@ class NetBoxScanner(object):
         hosts = []
         with open(csvfile,'r') as f:
             next(f)
-            hosts = [(data[0],data[1]) for data in
+            hosts = [(data[0],data[1]) for data in 
                 reader(f,delimiter=',')]
 
         for s in self.stats:
@@ -226,13 +257,14 @@ class NetBoxScanner(object):
         for host in hosts:
             self.sync_host(host)
         logging.info('finished: +{} ~{} -{} ?{} !{}'.format(
-            self.stats['created'], self.stats['updated'],
-            self.stats['deleted'], self.stats['undiscovered'],
+            self.stats['created'], self.stats['updated'], 
+            self.stats['deleted'], self.stats['undiscovered'], 
             self.stats['duplicated']))
 
-    def sync(self, networks):
+    def sync(self, networks, args_prefix):
         '''Scan some networks and sync them to NetBox.
 
+        :param args_prefix: True or False depending on the chosen commandline argument (Pass through to sync_host)
         :param networks: a list of valid networks, like ['10.0.0.0/8']
         :return: synching statistics
         '''
@@ -245,8 +277,8 @@ class NetBoxScanner(object):
 
         logging.info('started: {} networks'.format(len(networks)))
         for network in networks:
-            self.sync_network(network)
+            self.sync_network(network, args_prefix)
         logging.info('finished: +{} ~{} -{} ?{} !{}'.format(
-            self.stats['created'], self.stats['updated'], self.stats['deleted'],
+            self.stats['created'], self.stats['updated'], self.stats['deleted'], 
             self.stats['undiscovered'], self.stats['duplicated']))
         return True

@@ -16,7 +16,7 @@ from nbscanner import NetBoxScanner
 template = '''
 [GENERAL]
 tag       = auto
-vrf       = ITS
+vrf       = 
 unknown   = unknown host
 log       = .
 nmap_args = -T4 -O -F --host-timeout 30s
@@ -59,6 +59,8 @@ except KeyError:
 argp = ArgumentParser()
 argp.add_argument('-c', '--csv',
     help='import CSV file instead of scan network', default=None)
+argp.add_argument('-p', '--add-prefix', action="store_true",
+    help='Add the prefix to the scanned IP rather than using /32', default=None)
 args = argp.parse_args()
 
 logfile = '{}/netbox-scanner-{}.log'.format(general_conf['log'],
@@ -72,8 +74,11 @@ if __name__ == '__main__':
     nbs = NetBoxScanner(netbox_conf['address'], netbox_conf['token'],
         netbox_conf.getboolean('tls_verify'), general_conf['vrf'], general_conf['nmap_args'],
         tacacs_conf, general_conf['tag'], general_conf['unknown'])
+    args_prefix = False
+    if args.add_prefix:
+        args_prefix = True
     if not args.csv:
-        nbs.sync(networks)
+        nbs.sync(networks, args_prefix)
     else:
         nbs.sync_csv(args.csv)
     exit(0)
