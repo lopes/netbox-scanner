@@ -14,4 +14,4 @@ pynetbox==4.0.6
 python-nmap==0.6.1
 requests==2.21.0
 six==1.12.0
-urllib3==1.24.1
+urllib3==1.24.2
