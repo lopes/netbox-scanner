@@ -52,10 +52,9 @@ disable_warnings(InsecureRequestWarning)
 def cmd_nmap():  # nmap handler
     h = Nmap(nmap['path'], nmap['unknown'])
     h.run()
-    print(len(h.hosts));exit(0)
     scan = NetBoxScanner(
         netbox, 
-        Nmap(nmap['path'], nmap['unknown']).run(), 
+        h.hosts, 
         nmap['tag'], 
         nmap.getboolean('cleanup')
     )

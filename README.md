@@ -10,11 +10,16 @@ netbox-scanner is compatible with **Python 3.7+**, and can be installed like thi
     $ cd netbox-scanner
     $ pip install -r requirements.txt
 
+After installation, use the `netbox-scanner.conf` file as an example to create your own and put this file in `/opt/netbox` or prepend its name with a dot and put it in your home directory --`~/.netbox-scanner.conf`.  Keep reading to learn more about configuration.
+
 
 ## Basics
 netbox-scanner reads a user-defined source to discover IP addresses and descriptions, and insert them into NetBox.  To control what was previously inserted, netbox-scanner adds tags to each record, so it will know that that item can be handled.  In order to guarantee the integrity of manual inputs, records without such tags will not be updated or removed.
 
 It is important to note that if netbox-scanner cannot define the description for a given host, then it will insert the string defined in the `unknown` parameter.  Users can change those names at their own will.
+
+### Garbage Collection
+If the user marked the `cleanup` option to `yes`, then netbox-scanner will run a garbage collector after the synchronization finishes.  Basically, it will get all IP addresses recorded in NetBox under the same tag.  Then, both lists will be compared: the one just retrieved from NetBox and the list that was synced.  Hosts in the first list that don't appear in the second list will be deleted.
 
 
 ## Configuration

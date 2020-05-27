@@ -23,7 +23,7 @@ class NetBoxScanner(object):
         }
 
     def sync_host(self, host):
-        '''Syncs a single host to NetBox.
+        '''Syncs a single host to NetBox
 
         host: a tuple like ('10.0.0.1','Gateway')
         returns: True if syncing is good or False for errors
@@ -59,10 +59,20 @@ class NetBoxScanner(object):
             self.stats['created'] += 1
 
         return True
+    
+    def garbage_collector(self):
+        '''Removes records from NetBox not found in last sync'''
+        nbhosts = self.netbox.ipam.ip_addresses.filter(tag=self.tag)
+        for nbhost in nbhosts:
+            nbh = str(nbhost).split('/')[0]
+            if not any(nbh == addr[0] for addr in self.hosts):
+                nbhost.delete()
+                logging.info(f'deleted: {nbhost[0]}')
+                self.stats['deleted'] += 1
 
     def sync(self):
-        '''Synchronizes self.hosts to NetBox.
-        Returns synching statistics.
+        '''Synchronizes self.hosts to NetBox
+        Returns synching statistics
         '''
         for s in self.stats:
             self.stats[s] = 0
@@ -72,9 +82,9 @@ class NetBoxScanner(object):
             self.sync_host(host)
 
         if self.cleanup:
-            pass
+            self.garbage_collector()
 
-        logging.info('finished: +{} ~{} -{} !{}'.format(
+        logging.info('finished: .{} +{} ~{} -{} !{}'.format(
             self.stats['unchanged'],
             self.stats['created'],
             self.stats['updated'],
