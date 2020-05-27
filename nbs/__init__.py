@@ -5,12 +5,8 @@ from pynetbox import api
 
 class NetBoxScanner(object):
     
-    def __init__(self, netbox, hosts, tag, cleanup):
-        self.netbox = api(
-            netbox['address'],
-            netbox['token'],
-            ssl_verify=netbox.getboolean('tls_verify')
-        )
+    def __init__(self, address, token, tls_verify, hosts, tag, cleanup):
+        self.netbox = api(address, token, ssl_verify=tls_verify)
         self.hosts = hosts
         self.tag = tag
         self.cleanup = cleanup

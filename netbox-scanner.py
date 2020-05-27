@@ -53,7 +53,9 @@ def cmd_nmap():  # nmap handler
     h = Nmap(nmap['path'], nmap['unknown'])
     h.run()
     scan = NetBoxScanner(
-        netbox, 
+        netbox['address'],
+        netbox['token'],
+        netbox.getboolean('tls_verify'), 
         h.hosts, 
         nmap['tag'], 
         nmap.getboolean('cleanup')
