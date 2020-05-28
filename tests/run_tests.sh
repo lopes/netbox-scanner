@@ -10,3 +10,4 @@
 
 python -m unittest tests.test_netbox
 python -m unittest tests.test_nmap
+python -m unittest tests.test_prime

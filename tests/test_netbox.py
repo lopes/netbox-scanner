@@ -8,9 +8,9 @@ class TestRequest(unittest.TestCase):
         address = environ.get('NETBOX_ADDRESS')
         token = environ.get('NETBOX_TOKEN')
 
-        netbox = NetBoxScanner(address, token, False, [], 'test', False)
+        netbox = NetBoxScanner(address, token, False, 'test', False)
         self.assertIsInstance(netbox, NetBoxScanner)
-        self.assertEqual(netbox.sync(), True)
+        self.assertEqual(netbox.sync([]), True)
 
 
 if __name__ == '__main__':

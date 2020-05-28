@@ -11,6 +11,7 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from nbs import NetBoxScanner
 from nbs.nmap import Nmap
+from nbs.prime import Prime
 
 
 local_config = expanduser('~/.netbox-scanner.conf')
@@ -49,24 +50,37 @@ logging.getLogger().addHandler(logging.StreamHandler())
 disable_warnings(InsecureRequestWarning)
 
 
-def cmd_nmap():  # nmap handler
+def cmd_nmap(s):  # nmap handler
     h = Nmap(nmap['path'], nmap['unknown'])
     h.run()
-    scan = NetBoxScanner(
-        netbox['address'],
-        netbox['token'],
-        netbox.getboolean('tls_verify'), 
-        h.hosts, 
-        nmap['tag'], 
-        nmap.getboolean('cleanup')
-    )
-    scan.sync()
+    s.sync(h.hosts)
 
-def cmd_prime():  # prime handler
-    pass
+def cmd_prime(s):  # prime handler
+    h = Prime(
+        prime['address'],
+        prime['username'],
+        prime['password'],
+        prime.getboolean('tls_verify'), 
+        prime['unknown']
+    )
+    h.run()  # set access_point=True to process APs
+    s.sync(h.hosts)
 
 
 if __name__ == '__main__':
-    if args.command == 'nmap': cmd_nmap()
-    elif args.command == 'prime': cmd_prime()
+    scanner = NetBoxScanner(
+        netbox['address'],
+        netbox['token'],
+        netbox.getboolean('tls_verify'), 
+        nmap['tag'], 
+        nmap.getboolean('cleanup')
+    )
+
+    if args.command == 'nmap':
+        cmd_nmap(scanner)
+    elif args.command == 'prime':
+        scanner.tag = prime['tag']
+        scanner.cleanup = prime.getboolean('cleanup')
+        cmd_prime(scanner)
+
     exit(0)

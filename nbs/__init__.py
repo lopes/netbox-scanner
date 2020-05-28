@@ -5,9 +5,8 @@ from pynetbox import api
 
 class NetBoxScanner(object):
     
-    def __init__(self, address, token, tls_verify, hosts, tag, cleanup):
+    def __init__(self, address, token, tls_verify, tag, cleanup):
         self.netbox = api(address, token, ssl_verify=tls_verify)
-        self.hosts = hosts
         self.tag = tag
         self.cleanup = cleanup
         self.stats = {
@@ -56,29 +55,29 @@ class NetBoxScanner(object):
 
         return True
     
-    def garbage_collector(self):
+    def garbage_collector(self, hosts):
         '''Removes records from NetBox not found in last sync'''
         nbhosts = self.netbox.ipam.ip_addresses.filter(tag=self.tag)
         for nbhost in nbhosts:
             nbh = str(nbhost).split('/')[0]
-            if not any(nbh == addr[0] for addr in self.hosts):
+            if not any(nbh == addr[0] for addr in hosts):
                 nbhost.delete()
-                logging.info(f'deleted: {nbhost[0]}')
+                logging.info(f'deleted: {nbhost}')
                 self.stats['deleted'] += 1
 
-    def sync(self):
-        '''Synchronizes self.hosts to NetBox
-        Returns synching statistics
+    def sync(self, hosts):
+        '''Syncs hosts to NetBox
+        hosts: list of tuples like [(addr,description),...]
         '''
         for s in self.stats:
             self.stats[s] = 0
 
-        logging.info('started: {} hosts'.format(len(self.hosts)))
-        for host in self.hosts:
+        logging.info('started: {} hosts'.format(len(hosts)))
+        for host in hosts:
             self.sync_host(host)
 
         if self.cleanup:
-            self.garbage_collector()
+            self.garbage_collector(hosts)
 
         logging.info('finished: .{} +{} ~{} -{} !{}'.format(
             self.stats['unchanged'],
