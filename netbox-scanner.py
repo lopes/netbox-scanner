@@ -11,6 +11,7 @@ from urllib3.exceptions import InsecureRequestWarning
 
 from nbs import NetBoxScanner
 from nbs.nmap import Nmap
+from nbs.netxms import NetXMS
 from nbs.prime import Prime
 
 
@@ -27,12 +28,14 @@ else:
 
 netbox = config['NETBOX']
 nmap = config['NMAP']
+netxms = config['NETXMS']
 prime = config['PRIME']
 
 parser = ArgumentParser(description='netbox-scanner')
 subparsers = parser.add_subparsers(title='Commands', dest='command')
 subparsers.required = True
 argsp = subparsers.add_parser('nmap', help='Nmap module')
+argsp = subparsers.add_parser('netxms', help='NetXMS module')
 argsp = subparsers.add_parser('prime', help='Cisco Prime module')
 args = parser.parse_args()
 
@@ -52,6 +55,17 @@ disable_warnings(InsecureRequestWarning)
 
 def cmd_nmap(s):  # nmap handler
     h = Nmap(nmap['path'], nmap['unknown'])
+    h.run()
+    s.sync(h.hosts)
+
+def cmd_netxms(s):  # netxms handler
+    h = NetXMS(
+        netxms['address'],
+        netxms['username'],
+        netxms['password'],
+        netxms.getboolean('tls_verify'),
+        netxms['unknown']
+    )
     h.run()
     s.sync(h.hosts)
 
@@ -78,6 +92,10 @@ if __name__ == '__main__':
 
     if args.command == 'nmap':
         cmd_nmap(scanner)
+    elif args.command == 'netxms':
+        scanner.tag = 'netxms'
+        scanner.cleanup = netxms.getboolean('cleanup')
+        cmd_netxms(scanner)
     elif args.command == 'prime':
         scanner.tag = prime['tag']
         scanner.cleanup = prime.getboolean('cleanup')

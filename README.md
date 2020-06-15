@@ -56,25 +56,23 @@ This script accesses [Prime](https://www.cisco.com/c/en/us/products/cloud-system
 It is important to note everything was tested on Cisco Prime v3.4.0, using API v4.  It was noticed that when trying to retrieve access points data, Prime requires more privileges, so you must explicitly inform that you wish this by using `Prime().run(access_points=True)`.
 
 
+## NetXMS Module
+This module reads the full list of NetXMS' objects and searches for IPv4 addresses discarding loopback addresses.  Unfortunately, NetXMS API is not well documented and it is quite different from other APIs, since it doesn't paginate and uses cookies for authentication.  This way, querying NetXMS can take a couple of minutes depending on the number of records and it can downgrade the system.
+
+
 ## Tests
 Some basic tests are implemented under `tests`.  This directory comes with a shell script to run all the tests at once, but before running it, remember to setup some environment variables required by them, such as `NETBOX_ADDRESS` and `NMAP_PATH`.
 
-Here's the list of all variables:
-
-```bash
-NETBOX_ADDRESS
-NETBOX_TOKEN 
-
-NMAP_PATH
-
-PRIME_ADDRESS
-PRIME_USER
-PRIME_PASS
-```
+The script contains a list of all variables, but if you do not want to hardcode passwords, just make sure to export such variables in your shell and properly comment those lines.
 
 
 ## New Modules
 New modules should be implemented as a new file with the name of the module, for instance `nbs/netxms.py`.  In this case, a class `NetXMS` should be created in this file with a method `run`.  Finally, in `netbox-scanner.py`, a function `cmd_netxms` should be created to execute the just created class, and another option should be created both in the argument parsing section and in the if structure inside the main block.
+
+
+## Contributors
+
+- [Jarder Gonzalez](https://github.com/jfjunior) for the great NetXMS' API tips.
 
 
 ## License
