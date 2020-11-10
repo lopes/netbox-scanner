@@ -4,9 +4,9 @@ from pynetbox import api
 
 
 class NetBoxScanner(object):
-    
-    def __init__(self, address, token, tls_verify, tag, cleanup):
-        self.netbox = api(address, token, ssl_verify=tls_verify)
+
+    def __init__(self, address, token, tag, cleanup):
+        self.netbox = api(address, token)
         self.tag = tag
         self.cleanup = cleanup
         self.stats = {
@@ -36,17 +36,18 @@ class NetBoxScanner(object):
                     aux = nbhost.description
                     nbhost.description = host[1]
                     nbhost.save()
-                    logging.info(f'updated: {host[0]}/32 "{aux}" -> "{host[1]}"')
+                    logging.info(
+                        f'updated: {host[0]}/32 "{aux}" -> "{host[1]}"')
                     self.stats['updated'] += 1
                 else:
                     logging.info(f'unchanged: {host[0]}/32 "{host[1]}"')
                     self.stats['unchanged'] += 1
             else:
-                    logging.info(f'unchanged: {host[0]}/32 "{host[1]}"')
-                    self.stats['unchanged'] += 1
+                logging.info(f'unchanged: {host[0]}/32 "{host[1]}"')
+                self.stats['unchanged'] += 1
         else:
             self.netbox.ipam.ip_addresses.create(
-                address=host[0], 
+                address=host[0],
                 tags=[self.tag],
                 description=host[1]
             )
@@ -54,7 +55,7 @@ class NetBoxScanner(object):
             self.stats['created'] += 1
 
         return True
-    
+
     def garbage_collector(self, hosts):
         '''Removes records from NetBox not found in last sync'''
         nbhosts = self.netbox.ipam.ip_addresses.filter(tag=self.tag)
@@ -83,7 +84,7 @@ class NetBoxScanner(object):
             self.stats['unchanged'],
             self.stats['created'],
             self.stats['updated'],
-            self.stats['deleted'], 
+            self.stats['deleted'],
             self.stats['errors']
         ))
 

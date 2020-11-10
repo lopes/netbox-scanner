@@ -28,4 +28,3 @@ class Nmap(object):
                         host.find('address').attrib['addr'],
                         self.unknown
                     ))
-        
