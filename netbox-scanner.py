@@ -87,6 +87,7 @@ if __name__ == '__main__':
     scanner = NetBoxScanner(
         netbox['address'],
         netbox['token'],
+        netbox['ssl_verify'],
         nmap['tag'],
         nmap.getboolean('cleanup')
     )

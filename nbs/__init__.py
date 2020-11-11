@@ -1,21 +1,37 @@
 import logging
+import requests
 
 from pynetbox import api
 
 
 class NetBoxScanner(object):
 
-    def __init__(self, address, token, tag, cleanup):
-        self.netbox = api(address, token)
-        self.tag = tag
-        self.cleanup = cleanup
-        self.stats = {
-            'unchanged': 0,
-            'created': 0,
-            'updated': 0,
-            'deleted': 0,
-            'errors': 0
-        }
+    def __init__(self, address, token, ssl_verify, tag, cleanup):
+        if (ssl_verify == 'No'):
+            session = requests.Session()
+            session.verify = False
+            self.netbox = api(address, token)
+            self.netbox.http_session = session
+            self.tag = tag
+            self.cleanup = cleanup
+            self.stats = {
+                'unchanged': 0,
+                'created': 0,
+                'updated': 0,
+                'deleted': 0,
+                'errors': 0
+            }
+        else:
+            self.netbox = api(address, token)
+            self.tag = tag
+            self.cleanup = cleanup
+            self.stats = {
+                'unchanged': 0,
+                'created': 0,
+                'updated': 0,
+                'deleted': 0,
+                'errors': 0
+            }
 
     def sync_host(self, host):
         '''Syncs a single host to NetBox
