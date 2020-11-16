@@ -11,6 +11,8 @@ netbox-scanner is compatible with **Python 3.7+**, and can be installed like thi
 $ wget https://github.com/lopes/netbox-scanner/archive/master.zip
 $ unzip netbox-scanner-master.zip -d netbox-scanner
 $ cd netbox-scanner
+$ python3 -m venv venv
+$ source venv/bin/activate
 $ pip install -r requirements.txt
 ```
 
@@ -21,7 +23,7 @@ After installation, use the `netbox-scanner.conf` file as an example to create y
 ## Quick Start
 
 0. Clone the repo and install the dependencies as shown above.
-1. Move the `netbox-scanner.conf` file to your Netbox directory (`/opt/netbox`) and fill out the variables according to your setup.
+1. Move the `netbox-scanner.conf` file to your Netbox directory (`/opt/netbox`) and fill out the variables according to your setup. Don't forget to change the path to match where you put this repo under `[NMAP].path`.
 2. Go to the `samples` subdirectory of this repo and execute `./nmap-scan.sh` to get a first look at the behavior of this project.
 
 ## Basics
