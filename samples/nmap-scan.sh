@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # This is just an example. 
 #
@@ -16,11 +16,12 @@
 # to look for XML files.
 ##
 
-NETWORKS = "10.1.2.3/24 10.2.3.4/32 192.168.0.0/19"
-TODAY="$(date +%d.%m.%yT%H:%M:%S%Z)"
+NETWORKS="10.1.2.3/24 10.2.3.4/32 192.168.0.0/19"
+TODAY="$(date +%d%m%yT%H%M%S%Z)"
 
 for net in $NETWORKS; do
-    nmap -T4 -O -F --host-timeout 30s -oX nmap-"$net".xml
+  rawNet="${net:0:-3}"
+  sudo nmap -T4 -O -F --host-timeout 30s -oX nmap-"$rawNet".xml "$net"
 done
 
 python ../netbox-scanner.py nmap

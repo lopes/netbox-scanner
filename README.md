@@ -11,11 +11,20 @@ netbox-scanner is compatible with **Python 3.7+**, and can be installed like thi
 $ wget https://github.com/lopes/netbox-scanner/archive/master.zip
 $ unzip netbox-scanner-master.zip -d netbox-scanner
 $ cd netbox-scanner
+$ python3 -m venv venv
+$ source venv/bin/activate
 $ pip install -r requirements.txt
 ```
 
 After installation, use the `netbox-scanner.conf` file as an example to create your own and put this file in `/opt/netbox` or prepend its name with a dot and put it in your home directory --`~/.netbox-scanner.conf`.  Keep reading to learn more about configuration.
 
+> Starting with Netbox **v2.9.0** there are changes to the way tags are created. You must go into the web UI and explicity create a tag for each module you are planning to use here. So for example, if you want to use the nmap module, you have to create a Netbox tag called 'nmap' before you can successfully use it.
+
+## Quick Start
+
+0. Clone the repo and install the dependencies as shown above.
+1. Move the `netbox-scanner.conf` file to your Netbox directory (`/opt/netbox`) and fill out the variables according to your setup. Don't forget to change the path to match where you put this repo under `[NMAP].path`.
+2. Go to the `samples` subdirectory of this repo and execute `./nmap-scan.sh` to get a first look at the behavior of this project.
 
 ## Basics
 netbox-scanner reads a user-defined source to discover IP addresses and descriptions, and insert them into NetBox.  To control what was previously inserted, netbox-scanner adds tags to each record, so it will know that that item can be handled.  In order to guarantee the integrity of manual inputs, records without such tags will not be updated or removed.
