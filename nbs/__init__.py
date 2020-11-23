@@ -7,7 +7,7 @@ from pynetbox import api
 class NetBoxScanner(object):
 
     def __init__(self, address, token, ssl_verify, tag, cleanup):
-        if (ssl_verify == 'No'):
+        if (ssl_verify == 'no'):
             session = requests.Session()
             session.verify = False
             self.netbox = api(address, token)
@@ -66,8 +66,8 @@ class NetBoxScanner(object):
             print(self.tag)
             self.netbox.ipam.ip_addresses.create(
                 address=host[0],
-                tags=[self.tag],
-                dns_name=host[1],
+                # tags=[self.tag],
+                # dns_name=host[1],
                 description=host[1]
             )
             logging.info(f'created: {host[0]}/32 "{host[1]}"')
