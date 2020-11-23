@@ -110,3 +110,5 @@ scans/*
 logs/*
 
 test_api.py
+
+samples/custom-nmap-scan.schedule
