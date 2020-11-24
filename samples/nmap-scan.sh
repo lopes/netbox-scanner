@@ -35,8 +35,12 @@ TODAY="$(date +%d.%m.%yT%H:%M:%S%Z)"
 
 for net in "${NETWORKS[@]}"; do
     NETNAME=$(echo $net | tr -s '/' '-')
-    #nmap "$net" -T4 -O -F --host-timeout 30s -oX nmap-"$NETNAME".xml
-    nmap "$net" -T4 -sn --host-timeout 30s -oX nmap-"$NETNAME".xml
+
+    # requires sudo
+    nmap "$net" -T4 -O -F --host-timeout 30s -oX nmap-"$NETNAME".xml
+
+    # does not require sudo
+    #nmap "$net" -T4 -sn --host-timeout 30s -oX nmap-"$NETNAME".xml
 done
 
 python3 netbox-scanner.py nmap
