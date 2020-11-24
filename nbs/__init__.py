@@ -6,8 +6,8 @@ from pynetbox import api
 
 class NetBoxScanner(object):
 
-    def __init__(self, address, token, ssl_verify, tag, cleanup):
-        if (ssl_verify == 'no'):
+    def __init__(self, address, token, tls_verify, tag, cleanup):
+        if (tls_verify == 'no'):
             session = requests.Session()
             session.verify = False
             self.netbox = api(address, token)

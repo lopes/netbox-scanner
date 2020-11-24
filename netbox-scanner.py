@@ -63,7 +63,7 @@ logging.basicConfig(
 )
 logging.getLogger().addHandler(logging.StreamHandler())
 
-# useful if you have ssl_verify set to no
+# useful if you have tls_verify set to no
 disable_warnings(InsecureRequestWarning)
 
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     scanner = NetBoxScanner(
         netbox['address'],
         netbox['token'],
-        netbox['ssl_verify'],
+        netbox['tls_verify'],
         nmap['tag'],
         nmap.getboolean('cleanup')
     )
