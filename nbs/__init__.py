@@ -62,8 +62,6 @@ class NetBoxScanner(object):
                 logging.info(f'unchanged: {host[0]}/32 "{host[1]}"')
                 self.stats['unchanged'] += 1
         else:
-            print(host)
-            print(self.tag)
             self.netbox.ipam.ip_addresses.create(
                 address=host[0],
                 # tags=[self.tag],
