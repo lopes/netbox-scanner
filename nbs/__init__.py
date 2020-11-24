@@ -64,7 +64,7 @@ class NetBoxScanner(object):
         else:
             self.netbox.ipam.ip_addresses.create(
                 address=host[0],
-                # tags=[self.tag],
+                tags=[{"name": self.tag}],
                 # dns_name=host[1],
                 description=host[1]
             )
