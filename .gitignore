@@ -106,3 +106,9 @@ venv.bak/
 # trash
 .vscode/
 
+scans/*
+logs/*
+
+test_api.py
+
+samples/custom-nmap-scan.sh
