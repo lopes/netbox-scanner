@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import sys
 
 from configparser import ConfigParser
 from argparse import ArgumentParser
@@ -10,9 +11,15 @@ from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
 from nbs import NetBoxScanner
-from nbs.nmap import Nmap
-from nbs.netxms import NetXMS
-from nbs.prime import Prime
+
+argument = str(sys.argv[1])
+
+if argument == 'nmap':
+    from nbs.nmap import Nmap
+if argument == 'netxms':
+    from nbs.netxms import NetXMS
+if argument == 'prime':
+    from nbs.prime import Prime
 
 
 local_config = expanduser('~/.netbox-scanner.conf')
@@ -27,16 +34,22 @@ else:
     raise FileNotFoundError('Configuration file was not found.')
 
 netbox = config['NETBOX']
-nmap = config['NMAP']
-netxms = config['NETXMS']
-prime = config['PRIME']
+if argument == 'nmap':
+    nmap = config['NMAP']
+if argument == 'netxms':
+    netxms = config['NETXMS']
+if argument == 'prime':
+    prime = config['PRIME']
 
 parser = ArgumentParser(description='netbox-scanner')
 subparsers = parser.add_subparsers(title='Commands', dest='command')
 subparsers.required = True
-argsp = subparsers.add_parser('nmap', help='Nmap module')
-argsp = subparsers.add_parser('netxms', help='NetXMS module')
-argsp = subparsers.add_parser('prime', help='Cisco Prime module')
+if argument == 'nmap':
+    argsp = subparsers.add_parser('nmap', help='Nmap module')
+if argument == 'netxms':
+    argsp = subparsers.add_parser('netxms', help='NetXMS module')
+if argument == 'prime':
+    argsp = subparsers.add_parser('prime', help='Cisco Prime module')
 args = parser.parse_args()
 
 logfile = '{}/netbox-scanner-{}.log'.format(
@@ -44,12 +57,13 @@ logfile = '{}/netbox-scanner-{}.log'.format(
     datetime.now().isoformat()
 )
 logging.basicConfig(
-    filename=logfile, 
-    level=logging.INFO, 
+    filename=logfile,
+    level=logging.INFO,
     format='%(asctime)s\tnetbox-scanner\t%(levelname)s\t%(message)s'
 )
 logging.getLogger().addHandler(logging.StreamHandler())
 
+# useful if you have tls_verify set to no
 disable_warnings(InsecureRequestWarning)
 
 
@@ -57,6 +71,7 @@ def cmd_nmap(s):  # nmap handler
     h = Nmap(nmap['path'], nmap['unknown'])
     h.run()
     s.sync(h.hosts)
+
 
 def cmd_netxms(s):  # netxms handler
     h = NetXMS(
@@ -69,12 +84,13 @@ def cmd_netxms(s):  # netxms handler
     h.run()
     s.sync(h.hosts)
 
+
 def cmd_prime(s):  # prime handler
     h = Prime(
         prime['address'],
         prime['username'],
         prime['password'],
-        prime.getboolean('tls_verify'), 
+        prime.getboolean('tls_verify'),
         prime['unknown']
     )
     h.run()  # set access_point=True to process APs
@@ -85,8 +101,8 @@ if __name__ == '__main__':
     scanner = NetBoxScanner(
         netbox['address'],
         netbox['token'],
-        netbox.getboolean('tls_verify'), 
-        nmap['tag'], 
+        netbox['tls_verify'],
+        nmap['tag'],
         nmap.getboolean('cleanup')
     )
 

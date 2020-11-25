@@ -1,4 +1,5 @@
 import logging
+import requests
 
 from pynetbox import api
 
@@ -6,16 +7,31 @@ from pynetbox import api
 class NetBoxScanner(object):
 
     def __init__(self, address, token, tls_verify, tag, cleanup):
-        self.netbox = api(address, token, ssl_verify=tls_verify)
-        self.tag = tag
-        self.cleanup = cleanup
-        self.stats = {
-            'unchanged': 0,
-            'created': 0,
-            'updated': 0,
-            'deleted': 0,
-            'errors': 0
-        }
+        if (tls_verify == 'no'):
+            session = requests.Session()
+            session.verify = False
+            self.netbox = api(address, token)
+            self.netbox.http_session = session
+            self.tag = tag
+            self.cleanup = cleanup
+            self.stats = {
+                'unchanged': 0,
+                'created': 0,
+                'updated': 0,
+                'deleted': 0,
+                'errors': 0
+            }
+        else:
+            self.netbox = api(address, token)
+            self.tag = tag
+            self.cleanup = cleanup
+            self.stats = {
+                'unchanged': 0,
+                'created': 0,
+                'updated': 0,
+                'deleted': 0,
+                'errors': 0
+            }
 
     def sync_host(self, host):
         '''Syncs a single host to NetBox
@@ -36,18 +52,20 @@ class NetBoxScanner(object):
                     aux = nbhost.description
                     nbhost.description = host[1]
                     nbhost.save()
-                    logging.info(f'updated: {host[0]}/32 "{aux}" -> "{host[1]}"')
+                    logging.info(
+                        f'updated: {host[0]}/32 "{aux}" -> "{host[1]}"')
                     self.stats['updated'] += 1
                 else:
                     logging.info(f'unchanged: {host[0]}/32 "{host[1]}"')
                     self.stats['unchanged'] += 1
             else:
-                    logging.info(f'unchanged: {host[0]}/32 "{host[1]}"')
-                    self.stats['unchanged'] += 1
+                logging.info(f'unchanged: {host[0]}/32 "{host[1]}"')
+                self.stats['unchanged'] += 1
         else:
             self.netbox.ipam.ip_addresses.create(
                 address=host[0],
-                # tags=[self.tag],
+                tags=[{"name": self.tag}],
+                # dns_name=host[1],
                 description=host[1]
             )
             logging.info(f'created: {host[0]}/32 "{host[1]}"')
