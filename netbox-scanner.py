@@ -24,12 +24,15 @@ if argument == 'prime':
 
 local_config = expanduser('~/.netbox-scanner.conf')
 global_config = '/opt/netbox/netbox-scanner.conf'
+dir_config = './netbox-scanner.conf'
 config = ConfigParser()
 
 if isfile(local_config):
     config.read(local_config)
 elif isfile(global_config):
     config.read(global_config)
+elif isfile(dir_config):
+    config.read(dir_config)
 else:
     raise FileNotFoundError('Configuration file was not found.')
 
@@ -66,9 +69,11 @@ logging.getLogger().addHandler(logging.StreamHandler())
 # useful if you have tls_verify set to no
 disable_warnings(InsecureRequestWarning)
 
+with open(nmap['networks'], 'r') as file:
+    networks = file.readlines()
 
 def cmd_nmap(s):  # nmap handler
-    h = Nmap(nmap['path'], nmap['unknown'])
+    h = Nmap(nmap['unknown'], networks)
     h.run()
     s.sync(h.hosts)
 

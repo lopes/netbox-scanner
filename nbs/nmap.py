@@ -1,30 +1,33 @@
-import os
-import xml.etree.ElementTree as ET
-
+import nmap3
 
 class Nmap(object):
 
-    def __init__(self, path, unknown):
+    def __init__(self, unknown, networks):
         self.unknown = unknown
-        self.path = path
+        self.networks = networks
         self.hosts = list()
+        self.scan_results = {}
+
+    def scan(self):
+        nmap = nmap3.NmapHostDiscovery() # instantiate nmap object
+        for item in self.networks:
+            temp_scan_result = nmap.nmap_no_portscan(item.replace('\n', ''))
+            self.scan_results = {**self.scan_results, **temp_scan_result}
+        return self.scan_results
 
     def run(self):
-        for f in os.listdir(self.path):
-            if not f.endswith('.xml'):
-                continue
-            abspath = os.path.join(self.path, f)
-            tree = ET.parse(abspath)
-            root = tree.getroot()
+        scan_result = self.scan()
+        scan_result.pop("stats")
+        scan_result.pop("runtime")
+        for k,v in scan_result.items():
+            try:
+                self.hosts.append((
+                    k,
+                    v['hostname'][0]['name']
+                ))
+            except (IndexError, KeyError):
+                self.hosts.append((
+                    k,
+                    self.unknown
+                ))
 
-            for host in root.findall('host'):
-                try:
-                    self.hosts.append((
-                        host.find('address').attrib['addr'],
-                        host.find('hostnames').find('hostname').attrib['name']
-                    ))
-                except AttributeError:
-                    self.hosts.append((
-                        host.find('address').attrib['addr'],
-                        self.unknown
-                    ))
