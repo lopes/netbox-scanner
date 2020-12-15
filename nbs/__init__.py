@@ -1,6 +1,6 @@
 import logging
-import requests
 
+import requests
 from pynetbox import api
 
 
@@ -47,7 +47,12 @@ class NetBoxScanner(object):
             return False
 
         if nbhost:
-            if (self.tag in nbhost.tags):
+            tag_update = False
+            for tag in nbhost.tags:
+                if (self.tag == tag.name):
+                    tag_update = True
+                    break
+            if tag_update:
                 if (host[1] != nbhost.description):
                     aux = nbhost.description
                     nbhost.description = host[1]
@@ -59,7 +64,7 @@ class NetBoxScanner(object):
                     logging.info(f'unchanged: {host[0]}/32 "{host[1]}"')
                     self.stats['unchanged'] += 1
             else:
-                logging.info(f'unchanged: {host[0]}/32 "{host[1]}"')
+                logging.info(f'no-tag(unchanged): {host[0]}/32 "{host[1]}"')
                 self.stats['unchanged'] += 1
         else:
             self.netbox.ipam.ip_addresses.create(
