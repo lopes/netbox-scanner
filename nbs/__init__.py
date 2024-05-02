@@ -41,8 +41,9 @@ class NetBoxScanner(object):
         '''
         try:
             nbhost = self.netbox.ipam.ip_addresses.get(address=host[0])
-        except ValueError:
-            logging.error(f'duplicated: {host[0]}/32')
+        except ValueError as e:
+            logging.error(e)
+            logging.error(f'possibly duplicated: {host[0]}/32')
             self.stats['errors'] += 1
             return False
 
