@@ -2,6 +2,8 @@
 
 import logging
 import sys
+import docker
+import ipaddress
 
 from configparser import ConfigParser
 from argparse import ArgumentParser
@@ -34,12 +36,22 @@ else:
     raise FileNotFoundError('Configuration file was not found.')
 
 netbox = config['NETBOX']
+tag = 'netbox-scanner'
+cleanup = False
 if argument == 'nmap':
     nmap = config['NMAP']
+    tag = nmap['tag']
+    cleanup = nmap.getboolean('cleanup')
 if argument == 'netxms':
     netxms = config['NETXMS']
+    tag = netxms['tag']
 if argument == 'prime':
     prime = config['PRIME']
+    tag = prime['tag']
+# if argument == 'docker':
+#     dockerConf = config['Docker']
+#     tag = dockerConf['tag']
+#     cleanup = dockerConf.getboolean('cleanup')
 
 parser = ArgumentParser(description='netbox-scanner')
 subparsers = parser.add_subparsers(title='Commands', dest='command')
@@ -50,6 +62,8 @@ if argument == 'netxms':
     argsp = subparsers.add_parser('netxms', help='NetXMS module')
 if argument == 'prime':
     argsp = subparsers.add_parser('prime', help='Cisco Prime module')
+if argument == 'docker':
+    argsp = subparsers.add_parser('docker', help='Docker module')
 args = parser.parse_args()
 
 logfile = '{}/netbox-scanner-{}.log'.format(
@@ -96,14 +110,30 @@ def cmd_prime(s):  # prime handler
     h.run()  # set access_point=True to process APs
     s.sync(h.hosts)
 
+def cmd_docker(s):
+
+    if not config.has_section('dockerdef'):
+        config.add_section('dockerdef')
+    dockerDef = config['dockerdef'];
+    dockerDef.setdefault('cluster_type', 'Docker')
+    dockerDef.setdefault('cluster_prefix', 'Docker')
+    dockerDef.setdefault('vrf_prefix', 'Docker')
+    scanner.init_docker(dockerDef)
+
+    for s in config.sections():
+        if not s.startswith('Docker:'):
+            continue
+
+        dockerSection = dict(config.items(s))
+        scanner.sync_docker(dockerSection, dockerDef)
 
 if __name__ == '__main__':
     scanner = NetBoxScanner(
         netbox['address'],
         netbox['token'],
         netbox['tls_verify'],
-        nmap['tag'],
-        nmap.getboolean('cleanup')
+        tag,
+        cleanup
     )
 
     if args.command == 'nmap':
@@ -116,5 +146,7 @@ if __name__ == '__main__':
         scanner.tag = prime['tag']
         scanner.cleanup = prime.getboolean('cleanup')
         cmd_prime(scanner)
+    elif args.command == 'docker':
+        cmd_docker(scanner)
 
     exit(0)
