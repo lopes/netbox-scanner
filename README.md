@@ -23,15 +23,15 @@ After installation, use the `netbox-scanner.conf` file as an example to create y
 ## Quick Start
 
 0. Clone the repo and install the dependencies as shown above.
-1. Move the `netbox-scanner.conf` file to your Netbox directory (`/opt/netbox`) and fill out the variables according to your setup. Don't forget to change the path to match where you put this repo under `[NMAP].path`.
-2. Go to the `samples` subdirectory of this repo and execute `./nmap-scan.sh` to get a first look at the behavior of this project.
+1. Use the `netbox-scanner.conf` file that you find in the project directory or create your own under (`/opt/netbox/netbox-scanner.conf` or `~/.netbox-scanner.conf`) and fill out the variables according to your setup.
+2. Fill the networks you want to scan (one per line) under `networks.txt` and then run `python netbox-scanner.py nmap` to get a first look at the behavior of this project.
 
 ## Basics
 netbox-scanner reads a user-defined source to discover IP addresses and descriptions, and insert them into NetBox.  To control what was previously inserted, netbox-scanner adds tags to each record, so it will know that that item can be handled.  In order to guarantee the integrity of manual inputs, records without such tags will not be updated or removed.
 
 It is important to note that if netbox-scanner cannot define the description for a given host, then it will insert the string defined in the `unknown` parameter.  Users can change those names at their own will.
 
-For NetBox access, this script uses [pynetbox](https://github.com/digitalocean/pynetbox) --worth saying that was tested under NetBox v2.6.7.
+For NetBox access, this script uses [pynetbox](https://github.com/digitalocean/pynetbox) --worth saying that was tested under NetBox v2.9.11.
 
 ### Garbage Collection
 If the user marked the `cleanup` option to `yes`, then netbox-scanner will run a garbage collector after the synchronization finishes.  Basically, it will get all IP addresses recorded in NetBox under the same tag.  Then, both lists will be compared: the one just retrieved from NetBox and the list that was synced.  Hosts in the first list that don't appear in the second list will be deleted.
@@ -40,9 +40,9 @@ If the user marked the `cleanup` option to `yes`, then netbox-scanner will run a
 ## Configuration
 Users can interact with netbox-scanner by command line and configuration file.  The latter is pretty simple and straight forward: the only parameter accepted is the module you want to use.
 
-The configuration file (`netbox-scanner.conf`) is where netbox-scanner looks for details such as authentication data and path to files.  This file can be stored on the user's home directory or on `/opt/netbox`, but if you choose the first option, it must be a hidden file --`.netbox-scanner.conf`.
+The configuration file (`netbox-scanner.conf`) is where netbox-scanner looks for details such as authentication data and path to files.  This file can be stored on the user's home directory, on `/opt/netbox` or under the project root directory, but if you choose the first option, it must be a hidden file --`.netbox-scanner.conf`.
 
-> Remember that netbox-scanner will always look for this file at home directory, then at `/opt/netbox`, in this order.  The first occurrence will be considered.
+> Remember that netbox-scanner will always look for this file at home directory, then at `/opt/netbox`, and finally in the project root dir, in this order.  The first occurrence will be considered.
 
 
 ## Modules
@@ -54,10 +54,8 @@ Since version 2.0, netbox-scanner is based on modules.  This way, this program i
 
 
 ## Nmap Module
-Performing the scans is beyond netbox-scanner features, so you must run [Nmap](https://nmap.org/) and save the output as an XML file using the `-oX` parameter.  Since this file can grow really fast, you can scan each network and save it as a single XML file.  You just have to assure that all files are under the same directory before running the script --see `samples/nmap.sh` for an example.
-
-To properly setup this module, you must inform the path to the directory where the XML files reside, define a tag to insert to discovered hosts, and decide if clean up will take place.  Tested on Nmap v7.80.
-
+Performing the scans is incorporated now under netbox-scanner features, so you don't need to run [Nmap](https://nmap.org/) yourself. 
+In this version the scan doesn't need root privileges since it only checks for hosts up.
 
 ## Prime Module
 This script accesses [Prime](https://www.cisco.com/c/en/us/products/cloud-systems-management/prime-infrastructure/index.html) through RESTful API and all routines are implemented here.  Users only have to point to Prime's API, which looks like `https://prime.domain/webacs/api/v4/`, inform valid credentials allowed to use the API, and fill the other variables, just like in Nmap.

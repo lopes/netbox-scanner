@@ -1,7 +1,10 @@
 certifi==2022.12.7
 chardet==3.0.4
-idna==2.9
-pynetbox==4.3.1
-requests==2.23.0
+idna==2.10
+pynetbox==5.1.0
+requests==2.25.0
 six==1.15.0
-urllib3==1.26.5
+urllib3==1.26.2
+python3-nmap==1.4.9
+setuptools
+docker
