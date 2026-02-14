@@ -62,7 +62,7 @@ To properly setup this module, you must inform the path to the directory where t
 ## Prime Module
 This script accesses [Prime](https://www.cisco.com/c/en/us/products/cloud-systems-management/prime-infrastructure/index.html) through RESTful API and all routines are implemented here.  Users only have to point to Prime's API, which looks like `https://prime.domain/webacs/api/v4/`, inform valid credentials allowed to use the API, and fill the other variables, just like in Nmap.
 
-It is important to note everything was tested on Cisco Prime v3.4.0, using API v4.  It was noticed that when trying to retrieve access points data, Prime requires more privileges, so you must explicitly inform that you wish this by using `Prime().run(access_points=True)`.
+It is important to note everything was tested on Cisco Prime v3.4, using API v4.  It was noticed that when trying to retrieve access points data, Prime requires more privileges, so you must explicitly inform that you wish this by using `Prime().run(access_points=True)`.
 
 
 ## NetXMS Module
