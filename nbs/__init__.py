@@ -134,7 +134,7 @@ class NetBoxScanner(object):
                 logging.error(f'No devices matched name {deviceName}')
             device = next(devices)
             site = device.site
-            clusterName = f'Docker {device['name']}'
+            clusterName = f'Docker {device["name"]}'
             cluster = self.netbox.virtualization.clusters.get(name=clusterName)
             if cluster is None:
                 logging.info(f'No Cluster exists for device {deviceName}, creating...')
@@ -275,7 +275,7 @@ class NetBoxScanner(object):
                         serviceDescription = container.labels['org.opencontainers.image.title']
                     if 'org.opencontainers.image.description' in container.labels:
                         if serviceDescription is not None:
-                            serviceDescription = f'{serviceDescription} - {container.labels['org.opencontainers.image.description']}'
+                            serviceDescription = f'{serviceDescription} - {container.labels["org.opencontainers.image.description"]}'
                         else:
                             serviceDescription = container.labels['org.opencontainers.image.description']
 
@@ -347,10 +347,10 @@ class NetBoxScanner(object):
                 'external': None
             }
 
-        vrf = self.netbox.ipam.vrfs.get(name=f'Docker on {device['name']}')
+        vrf = self.netbox.ipam.vrfs.get(name=f'Docker on {device["name"]}')
         if vrf is None:
-            vrf = self.netbox.ipam.vrfs.create(name=f'Docker on {device['name']}', rd=f'docker-{device['name']}')
-            logging.info(f'Created missing VRF for docker on {device['name']} with ID {vrf.id}')
+            vrf = self.netbox.ipam.vrfs.create(name=f'Docker on {device["name"]}', rd=f'docker-{device["name"]}')
+            logging.info(f'Created missing VRF for docker on {device["name"]} with ID {vrf.id}')
 
         range = self.netbox.ipam.ip_ranges.get(description=networkName,vrf_id=vrf.id)
         if range is None:
