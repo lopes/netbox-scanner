@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import os
 import sys
 import docker
 import ipaddress
@@ -69,10 +70,9 @@ if argument == 'docker':
     argsp = subparsers.add_parser('docker', help='Docker module')
 args = parser.parse_args()
 
-logfile = '{}/netbox-scanner-{}.log'.format(
-    netbox['logs'],
-    datetime.now().isoformat()
-)
+if not os.path.isdir(netbox['logs']):
+    os.makedirs(netbox['logs'])
+logfile = f'{netbox["logs"]}/netbox-scanner-{datetime.now().isoformat()}.log'
 logging.basicConfig(
     filename=logfile,
     level=logging.INFO,
