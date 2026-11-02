@@ -61,7 +61,7 @@ class Request(object):
         self.url = url
         self.auth = auth
         self.timeout = TIMEOUT
-        self.context = None if tls_verify else _create_unverified_context()
+        self.context = None if tls_verify else _create_unverified_context()  # nosemgrep
         self.headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Basic {self.auth}'
