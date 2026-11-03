@@ -1,0 +1,30 @@
+name: Feature / Enhancement
+description: "Propose a new scanner module, NetBox API capability, or CLI improvement"
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What gap, limitation, or operational friction exists today, and why does solving it matter?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: "Background, NetBox version compatibility, affected modules (`nbs/`, `tests/`), and configuration impact."
+    validations:
+      required: true
+  - type: textarea
+    id: dod
+    attributes:
+      label: Definition of Done
+      description: Concrete deliverables, invariants, and verification criteria required to close this issue.
+      value: |
+        - [ ] Design questions resolved and approach validated
+        - [ ] Unit tests added in `tests/` using RFC 5737 synthetic network ranges
+        - [ ] Documentation and sample configs updated (`README.md`, `samples/`)
+        - [ ] All security and CI checks pass
+    validations:
+      required: true

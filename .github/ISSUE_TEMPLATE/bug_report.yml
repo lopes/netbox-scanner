@@ -1,0 +1,49 @@
+name: Bug Report
+description: "Report a defect in network discovery, NetBox API synchronization, or configuration parsing"
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Report a defect, regression, or unexpected behavior in netbox-scanner.
+  - type: dropdown
+    id: subsystem
+    attributes:
+      label: Affected Subsystem
+      options:
+        - "NetBox API Client & IPAM Synchronization (nbs/)"
+        - "Nmap / Network Discovery Engine"
+        - "CLI & Configuration Parsing (netbox-scanner.py)"
+        - "Samples & Test Suite (samples/, tests/)"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of the Bug
+      description: Clear and concise description of what is broken.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Exact commands, inputs, or steps that trigger the issue.
+      placeholder: |
+        1. Run `python3 netbox-scanner.py ...`
+        2. Observe error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Terminal Output / Error Logs
+      description: Paste relevant terminal output or stack trace here.
+      render: shell

@@ -1,0 +1,14 @@
+# Global default code owners
+* @lopes
+
+# NetBox Scanner Core & CLI
+/nbs/ @lopes
+/netbox-scanner.py @lopes
+/requirements.txt @lopes
+
+# Test Suite & Sample Configurations
+/tests/ @lopes
+/samples/ @lopes
+
+# CI/CD Workflows & Repository Governance
+/.github/ @lopes
